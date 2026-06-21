@@ -417,10 +417,11 @@ protected:
         // Extent from contents
         int contentBottom = (int)contents.size();
 
-        // For horizontal extent use raw lines when wrapping is enabled.
-        // Wrapped visual lines all fit within 'width', so they would report
-        // zero scrollable width even though the underlying text may be much longer.
-        const vector<string>& hLines = wrapText ? rawContents : contents;
+        // Horizontal extent: when wrapping is enabled the visual lines all fit
+        // within 'width', so we use wrapped contents to report zero scrollable
+        // width.  When wrapping is disabled we use rawContents so that long
+        // lines produce a proper horizontal scroll range for the scrollbar.
+        const vector<string>& hLines = wrapText ? contents : rawContents;
         int contentRight  = 0;
         for (const string& line : hLines)
             contentRight = max(contentRight, (int)line.size());

@@ -56,11 +56,14 @@ public:
         setScrollable(true);
     }
 
-    // Manual-position: for non-TBox ITScrollable targets (e.g. TColorChannel)
-    TScrollbar(TBox* attachParent, TBox* target, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII):
-        TBox(attachParent, width, height, top, left, colorPair), target(target), orientation(orientation), style(style)
+    // Manual-position: with a TBox* target — subscribes to scroll changes
+    // without overriding the manually-set position and size.
+    TScrollbar(TBox* attachParent, TBox* tTarget, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII):
+        TBox(attachParent, width, height, top, left, colorPair), target(tTarget), orientation(orientation), style(style)
     {
         setScrollable(true);
+        // Use the ITScrollable* overload to subscribe without repositioning.
+        if (tTarget) setTarget(static_cast<ITScrollable*>(tTarget));
     }
 
     void setTarget(TBox* t) {

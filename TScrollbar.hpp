@@ -100,7 +100,7 @@ public:
         if (result & TEventResult::Stop) return result;
         if (!target) return result;
         int delta = (direction == 4) ? -1 : 1;
-        target->setScrollValue(target->getScrollValue() + delta);
+        target->setScrollValue(target->getScrollValue(orientation) + delta, orientation);
         dirty = true;
         return result | TEventResult::Handled;
     }
@@ -118,20 +118,20 @@ public:
             : (x - getLeftAbsolute());
 
         if (rel == 0) {
-            target->setScrollValue(target->getScrollValue() - 1);
+            target->setScrollValue(target->getScrollValue(orientation) - 1, orientation);
         } else if (rel == barLen - 1) {
-            target->setScrollValue(target->getScrollValue() + 1);
+            target->setScrollValue(target->getScrollValue(orientation) + 1, orientation);
         } else if (rel >= thumbPos + 1 && rel < thumbPos + 1 + thumbSize) {
             dragging   = true;
             dragAnchor = (orientation == VERTICAL) ? y : x;
-            dragOrigin = target->getScrollValue();
+            dragOrigin = target->getScrollValue(orientation);
         } else {
             // page scroll — jump by visible track length
             int trackLen = max(1, barLen - 2);
-            int scroll   = target->getScrollValue();
+            int scroll   = target->getScrollValue(orientation);
             target->setScrollValue(rel < thumbPos + 1
                 ? scroll - trackLen
-                : scroll + trackLen);
+                : scroll + trackLen, orientation);
         }
 
         dirty = true;
@@ -150,9 +150,9 @@ public:
         if (trackLen <= thumbSize) return result;
 
         int delta       = (orientation == VERTICAL) ? (y - dragAnchor) : (x - dragAnchor);
-        int scrollRange = target->getScrollMax() - target->getScrollMin();
+        int scrollRange = target->getScrollMax(orientation) - target->getScrollMin(orientation);
         int scrollDelta = delta * scrollRange / (trackLen - thumbSize);
-        target->setScrollValue(dragOrigin + scrollDelta);
+        target->setScrollValue(dragOrigin + scrollDelta, orientation);
 
         dirty = true;
         return result | TEventResult::Handled;
@@ -204,8 +204,8 @@ private:
 
     void computeThumb(int barLen) {
         int trackLen    = max(1, barLen - 2);
-        int scrollMin   = target->getScrollMin();
-        int scrollMax   = target->getScrollMax();
+        int scrollMin   = target->getScrollMin(orientation);
+        int scrollMax   = target->getScrollMax(orientation);
         int scrollRange = scrollMax - scrollMin;
 
         if (scrollRange <= 0) {
@@ -221,7 +221,7 @@ private:
         thumbSize = max(1, trackLen / (scrollRange + 1));
         thumbSize = min(thumbSize, trackLen);
 
-        int scrollVal = target->getScrollValue() - scrollMin;
+        int scrollVal = target->getScrollValue(orientation) - scrollMin;
         thumbPos = scrollVal * (trackLen - thumbSize) / scrollRange;
         thumbPos = max(0, min(thumbPos, trackLen - thumbSize));
     }

@@ -22,7 +22,7 @@ public:
     short getColorPair(short colorIndex, short bgColorIndex) {
         TColorPair colorPair(colorIndex, bgColorIndex);
         auto colorPairIndex = array_search(colorPair, colorPairs);
-        if (ERR != colorPairIndex) return colorPairIndex;
+        if (ERR != colorPairIndex) return colorPairIndex + 1;
         if (ERR == init_pair(colorPairs.size() + 1, colorIndex, bgColorIndex))
             throw ERROR("Unable to initialize color pair");
         colorPairs.push_back(colorPair);

@@ -120,11 +120,22 @@ public:
         
     virtual ~TBox() {}
 
-    // ITScrollable implementation (vertical)
-    int  getScrollValue() const override { return scrollTop; }
-    int  getScrollMin()   const override { return 0; }
-    int  getScrollMax()   const override { return max(0, bottom - height + scrollPaddingBottom); }
-    void setScrollValue(int value) override { setScrollTop(value); }
+    // ITScrollable implementation — orientation-aware for any number of axes.
+    int  getScrollValue(int o) const override {
+        return (o == ITScrollable::ORIENTATION_VERTICAL) ? scrollTop : scrollLeft;
+    }
+    int  getScrollMin(int /*o*/) const override { return 0; }
+    int  getScrollMax(int o) const override {
+        if (o == ITScrollable::ORIENTATION_VERTICAL)
+            return max(0, bottom - height + scrollPaddingBottom);
+        return max(0, right - width + scrollPaddingRight);
+    }
+    void setScrollValue(int value, int o) override {
+        if (o == ITScrollable::ORIENTATION_VERTICAL)
+            setScrollTop(value);
+        else
+            setScrollLeft(value);
+    }
 
     // -------------------------------------------------------
     // Setters
@@ -265,6 +276,8 @@ public:
         return scrollTop >= maxScroll;
     }
 
+    bool isWrapText() const { return wrapText; }
+
     // -------------------------------------------------------
     // Hit-testing
     // -------------------------------------------------------
@@ -403,8 +416,13 @@ protected:
     void recalculateBounds() {
         // Extent from contents
         int contentBottom = (int)contents.size();
+
+        // For horizontal extent use raw lines when wrapping is enabled.
+        // Wrapped visual lines all fit within 'width', so they would report
+        // zero scrollable width even though the underlying text may be much longer.
+        const vector<string>& hLines = wrapText ? rawContents : contents;
         int contentRight  = 0;
-        for (const string& line : contents)
+        for (const string& line : hLines)
             contentRight = max(contentRight, (int)line.size());
 
         // Extent from children

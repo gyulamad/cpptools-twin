@@ -122,7 +122,7 @@ protected:
             filename + ":" + 
             to_string(editor->getCursorCol()) + ":" + 
             to_string(editor->getCursorRow()) + 
-            " (" + (modified ? " modified" : "saved") + ")"
+            " (" + (modified ? "modified" : "saved") + ")"
         );
     }
 };

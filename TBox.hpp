@@ -453,7 +453,10 @@ protected:
         }
 
         // Nothing visible at all
-        if (clipTop >= clipBottom || clipLeft >= clipRight) return;
+        if (clipTop >= clipBottom || clipLeft >= clipRight) {
+            attroff(COLOR_PAIR(colorPair));
+            return;
+        }
 
         for (int line = 0; line < height; line++) {
             int screenRow = absTop + line;
@@ -481,8 +484,7 @@ protected:
             if ((int)str.size() < drawWidth)
                 str += string(drawWidth - str.size(), ' ');
 
-            move(screenRow, drawLeft);
-            printw("%s", str.c_str());
+            putstrxy(screenRow, drawLeft, str.c_str());
         }
 
         attroff(COLOR_PAIR(colorPair));
@@ -491,7 +493,7 @@ protected:
     // Prints `str` at a position RELATIVE to this box's top-left corner,
     // accounting for scroll offset. Clips against this box and all ancestors.
     // Call attron(COLOR_PAIR(...)) before using this.
-    void print(int row, int col, const char* str) {
+    void print(int row, int col, const string& str) {
         // Derive absolute screen position from relative coords at draw time
         int screenRow = getTopAbsolute()  + row;
         int screenCol = getLeftAbsolute() + col;
@@ -517,11 +519,7 @@ protected:
         if (screenRow < clipTop    || screenRow >= clipBottom) return;
         if (screenCol < clipLeft   || screenCol >= clipRight)  return;
 
-        move(screenRow, screenCol);
-        printw("%s", str);
-    }
-    void print(int row, int col, const string& str) {
-        print(row, col, str.c_str());
+        putstrxy(screenRow, screenCol, str.c_str());
     }
 
     void applyWrap() {
@@ -553,6 +551,17 @@ protected:
     }
 
 private:
+
+    // Single point of responsibility for cursor-neutral text output.
+    // "Whatever moves the cursor shall restore it."
+    // Callers must ensure attron(COLOR_PAIR(...)) is active before calling.
+    static void putstrxy(int row, int col, const char* str) {
+        int savedRow, savedCol;
+        getyx(stdscr, savedRow, savedCol);
+        move(row, col);
+        printw("%s", str);
+        move(savedRow, savedCol);
+    }
 
     void markChildrenDirty() {
         for (TBox* child : children) {

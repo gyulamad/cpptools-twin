@@ -1,0 +1,286 @@
+#pragma once
+
+#include "TEventHandler.hpp"
+#include "TBox.hpp"
+#include "TTheme.hpp"
+
+class TWindow: public TEventHandler {
+protected:
+    TTheme* theme = nullptr;
+    bool ownTheme = false;
+//    TColorPairPalette palette;
+    TBox* root = nullptr;
+    TBox* focus = nullptr;
+
+public:
+    TWindow(TTheme* theme = nullptr): theme(theme) {
+        initscr();
+        start_color();
+        cbreak();
+        noecho();
+        keypad(stdscr, TRUE);
+        curs_set(0);
+        timeout(100);
+        mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+
+        if (!theme) {
+            ownTheme = true;
+            this->theme = new TTheme();
+        }
+        short colorPair = this->theme->getWindowColorPair();
+        root = new TBox(colorPair);
+        root->setSize(COLS, LINES);
+    }
+
+
+    // TWindow(short colorIndex = COLOR_WHITE, short bgColorIndex = COLOR_BLACK)
+    // {
+    //     initscr();
+    //     start_color();
+    //     cbreak();
+    //     noecho();
+    //     keypad(stdscr, TRUE);
+    //     curs_set(0);
+    //     timeout(100);
+    //     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+
+    //     short colorPair = palette.getColorPair(colorIndex, bgColorIndex);
+    //     root = new TBox(colorPair);
+    //     root->setSize(COLS, LINES);
+    // }
+
+    // void init(short colorPair = -1) {
+    //     initscr();
+    //     start_color();
+    //     cbreak();
+    //     noecho();
+    //     keypad(stdscr, TRUE);
+    //     curs_set(0);
+    //     timeout(100);
+    //     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+
+    //     if (colorPair == -1) colorPair = theme.getWindowColorPair();
+    //     root = new TBox(colorPair);
+    //     root->setSize(COLS, LINES);
+    // }
+
+    TTheme* getTheme() { return theme; }
+    // TColorPairPalette& getPalette() { return palette; }
+    TBox* getRoot() { return root; }
+
+    virtual ~TWindow() {        
+        delete root;
+        if (ownTheme) delete theme;
+        endwin();
+    }
+    
+
+    void loop() {
+        while (true) {
+            root->draw();
+            refresh();
+
+            int event = getch();
+            if (event == ERR) continue;
+            if (event == KEY_MOUSE) {
+                handleMouse();
+                flushinp();
+            } else if (event == KEY_RESIZE) {
+                // KEY_RESIZE already updated LINES/COLS internally in ncurses
+                int rows = LINES;
+                int cols = COLS;
+                root->setSize(COLS, LINES);
+                onResize(rows, cols);
+            } else {
+                onKeyPress(event, keyName(event));
+            }
+        }
+    }
+
+protected:
+
+    bool onKeyPress(int key, string name) override {
+        if (!TEventHandler::onKeyPress(key, name)) return false;
+        if (focus == nullptr) return true;
+        return focus->onKeyPress(key, name);
+    }
+
+    bool onMouseMove(int x, int y) override {
+        if (!TEventHandler::onMouseMove(x, y)) return false;
+        if (focus == nullptr) return true;
+        return focus->onMouseMove(x, y);
+    }
+
+    bool onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        if (!TEventHandler::onMouseClick(x, y, button, repeat)) return false;
+        TBox* target = root->findMouseAt(x, y);
+        if (target == nullptr) return true;
+        setFocus(target);
+        return target->onMouseClick(x, y, button, repeat);
+    }
+
+    bool onMouseDown(int x, int y, unsigned int button) override {
+        if (!TEventHandler::onMouseDown(x, y, button)) return false;
+        TBox* target = root->findMouseAt(x, y);
+        if (target == nullptr) return true;
+        setFocus(target);
+        return target->onMouseDown(x, y, button);
+    }
+
+    bool onMouseUp(int x, int y, unsigned int button) override {
+        if (!TEventHandler::onMouseUp(x, y, button)) return false;
+        TBox* target = root->findMouseAt(x, y);
+        if (target == nullptr) return true;
+        setFocus(target);
+        return target->onMouseUp(x, y, button);
+    }
+
+    bool onMouseScroll(int x, int y, unsigned int direction) override {
+        if (!TEventHandler::onMouseScroll(x, y, direction)) return false;
+        // Route the scroll event to the deepest scrollable box under the
+        // cursor. Focus is intentionally NOT changed by scroll events.
+        TBox* target = root->findScrollableAt(x, y);
+        if (target) return target->onMouseScroll(x, y, direction);
+        return true;
+    }
+
+    bool onResize(int cols, int rows) override {
+        if (!TEventHandler::onResize(cols, rows)) return false;
+        root->setSize(cols, rows);
+        return root->onResize(cols, rows);
+    }
+
+    void setFocus(TBox* box) {
+        if (focus == box) return;
+        if (focus) {
+            focus->setFocused(false);
+            focus->onFocusLeave();
+        }
+        focus = box;
+        if (focus) {
+            focus->setFocused(true);
+            focus->onFocusGain();
+        }
+    }
+
+    TBox* getFocus() const {
+        return focus;
+    }
+
+private:
+
+    void handleMouse() {
+        MEVENT mevent;
+        if (getmouse(&mevent) != OK) return;
+
+        if (isClick(mevent.bstate)) {
+            int button = -1;
+            int repeat = -1;
+
+            if (mevent.bstate & BUTTON1_CLICKED) {
+                button = 1; repeat = 1;
+            } else if (mevent.bstate & BUTTON2_CLICKED) {
+                button = 2; repeat = 1;
+            } else if (mevent.bstate & BUTTON3_CLICKED) {
+                button = 3; repeat = 1;
+            } else if (mevent.bstate & BUTTON4_CLICKED) {
+                button = 4; repeat = 1;
+            } else if (mevent.bstate & BUTTON1_DOUBLE_CLICKED) {
+                button = 1; repeat = 2;
+            } else if (mevent.bstate & BUTTON2_DOUBLE_CLICKED) {
+                button = 2; repeat = 2;
+            } else if (mevent.bstate & BUTTON3_DOUBLE_CLICKED) {
+                button = 3; repeat = 2;
+            } else if (mevent.bstate & BUTTON4_DOUBLE_CLICKED) {
+                button = 4; repeat = 2;
+            } else if (mevent.bstate & BUTTON1_TRIPLE_CLICKED) {
+                button = 1; repeat = 3;
+            } else if (mevent.bstate & BUTTON2_TRIPLE_CLICKED) {
+                button = 2; repeat = 3;
+            } else if (mevent.bstate & BUTTON3_TRIPLE_CLICKED) {
+                button = 3; repeat = 3;
+            } else if (mevent.bstate & BUTTON4_TRIPLE_CLICKED) {
+                button = 4; repeat = 3;
+            }
+
+            onMouseClick(mevent.x, mevent.y, button, repeat);
+            return;
+        }
+        if (isPressed(mevent.bstate)) {
+            int button = -1;
+            if (mevent.bstate & BUTTON1_PRESSED) button = 1;
+            else if (mevent.bstate & BUTTON2_PRESSED) button = 2;
+            else if (mevent.bstate & BUTTON3_PRESSED) button = 3;
+            onMouseDown(mevent.x, mevent.y, button);
+            return;
+        }
+        if (isReleased(mevent.bstate)) {
+            int button = -1;
+            if (mevent.bstate & BUTTON1_RELEASED) button = 1;
+            else if (mevent.bstate & BUTTON2_RELEASED) button = 2;
+            else if (mevent.bstate & BUTTON3_RELEASED) button = 3;
+            onMouseUp(mevent.x, mevent.y, button);
+            return;
+        }
+        if (mevent.bstate & BUTTON4_PRESSED || mevent.bstate & BUTTON5_PRESSED) {    
+            int direction = -1;
+            if (mevent.bstate & BUTTON4_PRESSED) direction = 4;
+            else if (mevent.bstate & BUTTON5_PRESSED) direction = 5;
+            onMouseScroll(mevent.x, mevent.y, direction);
+            return;
+        }
+        onMouseMove(mevent.x, mevent.y); // Note: ncurses bug or versioning issue: mouse-move never handled!
+    }
+
+    bool isClick(mmask_t bstate) {
+        mmask_t clickMask = BUTTON1_CLICKED | BUTTON1_DOUBLE_CLICKED | BUTTON1_TRIPLE_CLICKED
+                          | BUTTON2_CLICKED | BUTTON2_DOUBLE_CLICKED | BUTTON2_TRIPLE_CLICKED
+                          | BUTTON3_CLICKED | BUTTON3_DOUBLE_CLICKED | BUTTON3_TRIPLE_CLICKED;
+        return (bstate & clickMask) != 0;
+    }
+
+    bool isPressed(mmask_t bstate) {
+        mmask_t pressMask = BUTTON1_PRESSED | BUTTON2_PRESSED | BUTTON3_PRESSED;
+        return (bstate & pressMask) != 0;
+    }
+
+    bool isReleased(mmask_t bstate) {
+        mmask_t releaseMask = BUTTON1_RELEASED | BUTTON2_RELEASED | BUTTON3_RELEASED;
+        return (bstate & releaseMask) != 0;
+    }
+
+    static string keyName(int key) {
+        // Special keys via KEY_* macros
+        if (key == KEY_UP) return "Up";
+        if (key == KEY_DOWN) return "Down";
+        if (key == KEY_LEFT) return "Left";
+        if (key == KEY_RIGHT) return "Right";
+        if (key == KEY_HOME) return "Home";
+        if (key == KEY_END) return "End";
+        if (key == KEY_PPAGE) return "PgUp";
+        if (key == KEY_NPAGE) return "PgDn";
+        if (key == KEY_DC) return "Delete";
+        if (key == KEY_IC) return "Insert";
+        if (key == KEY_BACKSPACE) return "Backspace";
+        if (key == '\t') return "Tab";
+        if (key == KEY_ENTER || key == '\n') return "Enter";
+        if (key == 27) return "Esc";
+
+        // Function keys F1-F64 via KEY_F(n) macro
+        const int base = KEY_F(0);
+        const int step = KEY_F(1) - KEY_F(0);
+        if (key >= base && key < base + step * 64)
+            return "F" + to_string((key - base) / step);
+
+        // Control characters (values 0-31) using ^ notation
+        if (key >= 0 && key < 32)
+            return "^" + string(1, static_cast<char>(key + '@'));
+
+        // Printable ASCII
+        if (key >= 32 && key <= 126)
+            return string(1, static_cast<char>(key));
+
+        // Fallback for any other code
+        return "(" + to_string(key) + ")";
+    }
+};

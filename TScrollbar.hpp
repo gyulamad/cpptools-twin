@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TBox.hpp"
+#include "TEventResult.hpp"
 
 class TScrollbar: public TBox {
 public:
@@ -87,17 +88,20 @@ public:
 
     // ── events ────────────────────────────────────────────────────
 
-    bool onMouseScroll(int x, int y, unsigned int direction) override {
-        if (!target) return true;
+    TEventResult onMouseScroll(int /*x*/, int /*y*/, unsigned int direction) override {
+        TEventResult result = TBox::onMouseScroll(/*x=*/0, /*y=*/0, direction);
+        if (result & TEventResult::Stop) return result;
+        if (!target) return result;
         int delta = (direction == 4) ? -1 : 1;
         target->setScrollValue(target->getScrollValue() + delta);
         dirty = true;
-        return true;
+        return result | TEventResult::Handled;
     }
 
-    bool onMouseDown(int x, int y, unsigned int button) override {
-        if (!TBox::onMouseDown(x, y, button)) return false;
-        if (button != 1 || !target) return true;
+   TEventResult onMouseDown(int x, int y, unsigned int button) override {
+        TEventResult result = TBox::onMouseDown(x, y, button);
+        if (result & TEventResult::Stop) return result;
+        if (button != 1 || !target) return result;
 
         int barLen = (orientation == VERTICAL) ? height : width;
         computeThumb(barLen);
@@ -124,18 +128,19 @@ public:
         }
 
         dirty = true;
-        return true;
+        return result | TEventResult::Handled;
     }
 
-    bool onMouseMove(int x, int y) override {
-        if (!TBox::onMouseMove(x, y)) return false;
-        if (!dragging || !target) return true;
+    TEventResult onMouseMove(int x, int y) override {
+        TEventResult result = TBox::onMouseMove(x, y);
+        if (result & TEventResult::Stop) return result;
+        if (!dragging || !target) return result;
 
         int barLen   = (orientation == VERTICAL) ? height : width;
         int trackLen = max(1, barLen - 2);
         computeThumb(barLen);
 
-        if (trackLen <= thumbSize) return true;
+        if (trackLen <= thumbSize) return result;
 
         int delta       = (orientation == VERTICAL) ? (y - dragAnchor) : (x - dragAnchor);
         int scrollRange = target->getScrollMax() - target->getScrollMin();
@@ -143,13 +148,14 @@ public:
         target->setScrollValue(dragOrigin + scrollDelta);
 
         dirty = true;
-        return true;
+        return result | TEventResult::Handled;
     }
 
-    bool onMouseUp(int x, int y, unsigned int button) override {
-        if (!TBox::onMouseUp(x, y, button)) return false;
+    TEventResult onMouseUp(int x, int y, unsigned int button) override {
+        TEventResult result = TBox::onMouseUp(x, y, button);
+        if (result & TEventResult::Stop) return result;
         dragging = false;
-        return true;
+        return result | TEventResult::Handled;
     }
 
 protected:

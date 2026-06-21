@@ -48,42 +48,48 @@ public:
     }
 
 protected:
-    void onFocusGain() override {
-        TEventHandler::onFocusGain();
+    TEventResult onFocusGain() override {
+        TEventResult result = TEventHandler::onFocusGain();
+        if (result & TEventResult::Stop) return result;
         curs_set(1);
         dirty = true;
+        return result | TEventResult::Handled;
     }
 
-    void onFocusLeave() override {
+    TEventResult onFocusLeave() override {
+        TEventResult result = TEventHandler::onFocusGain();
+        if (result & TEventResult::Stop) return result;
         curs_set(0);
-        TEventHandler::onFocusLeave();
+        result |= TEventHandler::onFocusLeave();
         dirty = true;
+        return result | TEventResult::Handled;
     }
 
-    bool onKeyPress(int key, string name) override {
-        if (!TBox::onKeyPress(key, name)) return false;
+   TEventResult onKeyPress(int key, string name) override {
+        TEventResult result = TBox::onKeyPress(key, name);
+        if (result & TEventResult::Stop) return result;
 
         // Printable ASCII characters
         if (key >= 32 && key <= 126) {
             insertChar((char)key);
-            return true;
+            return result | TEventResult::Handled;
         }
 
         if (key == KEY_BACKSPACE || key == 127) {
             handleBackspace();
-            return true;
+            return result | TEventResult::Handled;
         }
 
         if (key == KEY_DC) {
             handleDelete();
-            return true;
+            return result | TEventResult::Handled;
         }
 
         if (key == '\n' || key == KEY_ENTER) {
             if (multiLine) {
                 insertNewline();
             }
-            return true;
+            return result | TEventResult::Handled;
         }
 
         // Tab — batch-insert spaces for efficiency and consistent rendering.
@@ -94,31 +100,32 @@ protected:
             line.insert((size_t)cursorCol, 4, ' ');
             cursorCol += 4;
             updateContentsFromRaw();
-            return true;
+            return result | TEventResult::Handled;
         }
 
         // Arrow keys
-        if (name == "Up")    { moveCursorUp();    return true; }
-        if (name == "Down")  { moveCursorDown();  return true; }
-        if (name == "Left")  { moveCursorLeft();  return true; }
-        if (name == "Right") { moveCursorRight(); return true; }
+        if (name == "Up")    { moveCursorUp();    return result | TEventResult::Handled; }
+        if (name == "Down")  { moveCursorDown();  return result | TEventResult::Handled; }
+        if (name == "Left")  { moveCursorLeft();  return result | TEventResult::Handled; }
+        if (name == "Right") { moveCursorRight(); return result | TEventResult::Handled; }
 
         // Home/End
-        if (name == "Home" || name == "^A") { moveCursorHome();   return true; }
-        if (name == "End"  || name == "^E") { moveCursorEnd();    return true; }
+        if (name == "Home" || name == "^A") { moveCursorHome();   return result | TEventResult::Handled; }
+        if (name == "End"  || name == "^E") { moveCursorEnd();    return result | TEventResult::Handled; }
 
         // Ctrl+Home / Ctrl+End — start/end of document
-        if (key == KEY_HOME) { moveCursorDocStart(); return true; }
-        if (key == KEY_END)  { moveCursorDocEnd();   return true; }
+        if (key == KEY_HOME) { moveCursorDocStart(); return result | TEventResult::Handled; }
+        if (key == KEY_END)  { moveCursorDocEnd();   return result | TEventResult::Handled; }
 
-        // Unhandled key — let parent handlers process it.
-        return false;
+        // Unhandled key — propagate to parent handlers.
+        return result;
     }
 
-    bool onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
-        if (!TBox::onMouseClick(x, y, button, repeat)) return false;
+    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        TEventResult result = TBox::onMouseClick(x, y, button, repeat);
+        if (result & TEventResult::Stop) return result;
         moveToScreenPos(x, y);
-        return true;
+        return result | TEventResult::Handled;
     }
 
     void redraw() override {

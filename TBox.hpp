@@ -329,62 +329,69 @@ public:
     // Event handlers
     // -------------------------------------------------------
 
-    virtual bool onKeyPress(int key, string name) override {
-        if (!TEventHandler::onKeyPress(key, name)) return false;
+    virtual TEventResult onKeyPress(int key, string name) override {
+        TEventResult result = TEventHandler::onKeyPress(key, name);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
 
-    virtual bool onMouseMove(int x, int y) override {
-        if (!TEventHandler::onMouseMove(x, y)) return false;
+    virtual TEventResult onMouseMove(int x, int y) override {
+        TEventResult result = TEventHandler::onMouseMove(x, y);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
 
-    virtual bool onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
-        if (!TEventHandler::onMouseClick(x, y, button, repeat)) return false;
+    virtual TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        TEventResult result = TEventHandler::onMouseClick(x, y, button, repeat);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
-    
-    virtual bool onMouseDown(int x, int y, unsigned int button) override {
-        if (!TEventHandler::onMouseDown(x, y, button)) return false;
+
+    virtual TEventResult onMouseDown(int x, int y, unsigned int button) override {
+        TEventResult result = TEventHandler::onMouseDown(x, y, button);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
-    
-    virtual bool onMouseUp(int x, int y, unsigned int button) override {
-        if (!TEventHandler::onMouseUp(x, y, button)) return false;
+
+    virtual TEventResult onMouseUp(int x, int y, unsigned int button) override {
+        TEventResult result = TEventHandler::onMouseUp(x, y, button);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
 
-    virtual bool onMouseScroll(int x, int y, unsigned int direction) override {
-        if (!TEventHandler::onMouseScroll(x, y, direction)) return false;
-        if (!scrollable) return false;
+    virtual TEventResult onMouseScroll(int x, int y, unsigned int direction) override {
+        TEventResult result = TEventHandler::onMouseScroll(x, y, direction);
+        if (result & TEventResult::Stop) return result;
+        if (!scrollable) return result;
         // direction 4 = wheel up (scroll content up → decrement scrollTop)
         // direction 5 = wheel down (scroll content down → increment scrollTop)
         int delta = (direction == 4) ? -scrollSpeed : scrollSpeed;
         setScrollTop(scrollTop + delta);
-        return true;
+        return result;
     }
 
-    virtual bool onResize(int cols, int rows) override {
-        if (!TEventHandler::onResize(cols, rows)) return false;
+    virtual TEventResult onResize(int cols, int rows) override {
+        TEventResult result = TEventHandler::onResize(cols, rows);
+        if (result & TEventResult::Stop) return result;
 
         // TODO implement universal event handlings here if necessary
 
-        return true;
+        return result;
     }
 
 protected:

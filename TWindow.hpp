@@ -99,53 +99,60 @@ public:
 
 protected:
 
-    bool onKeyPress(int key, string name) override {
-        if (!TEventHandler::onKeyPress(key, name)) return false;
-        if (focus == nullptr) return true;
+    TEventResult onKeyPress(int key, string name) override {
+        TEventResult result = TEventHandler::onKeyPress(key, name);
+        if (result & TEventResult::Stop) return result;
+        if (focus == nullptr) return result;
         return focus->onKeyPress(key, name);
     }
 
-    bool onMouseMove(int x, int y) override {
-        if (!TEventHandler::onMouseMove(x, y)) return false;
-        if (focus == nullptr) return true;
+    TEventResult onMouseMove(int x, int y) override {
+        TEventResult result = TEventHandler::onMouseMove(x, y);
+        if (result & TEventResult::Stop) return result;
+        if (focus == nullptr) return result;
         return focus->onMouseMove(x, y);
     }
 
-    bool onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
-        if (!TEventHandler::onMouseClick(x, y, button, repeat)) return false;
+    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        TEventResult result = TEventHandler::onMouseClick(x, y, button, repeat);
+        if (result & TEventResult::Stop) return result;
         TBox* target = root->findMouseAt(x, y);
-        if (target == nullptr) return true;
+        if (target == nullptr) return result;
         setFocus(target);
         return target->onMouseClick(x, y, button, repeat);
     }
 
-    bool onMouseDown(int x, int y, unsigned int button) override {
-        if (!TEventHandler::onMouseDown(x, y, button)) return false;
+    TEventResult onMouseDown(int x, int y, unsigned int button) override {
+        TEventResult result = TEventHandler::onMouseDown(x, y, button);
+        if (result & TEventResult::Stop) return result;
         TBox* target = root->findMouseAt(x, y);
-        if (target == nullptr) return true;
+        if (target == nullptr) return result;
         setFocus(target);
         return target->onMouseDown(x, y, button);
     }
 
-    bool onMouseUp(int x, int y, unsigned int button) override {
-        if (!TEventHandler::onMouseUp(x, y, button)) return false;
+    TEventResult onMouseUp(int x, int y, unsigned int button) override {
+        TEventResult result = TEventHandler::onMouseUp(x, y, button);
+        if (result & TEventResult::Stop) return result;
         TBox* target = root->findMouseAt(x, y);
-        if (target == nullptr) return true;
+        if (target == nullptr) return result;
         setFocus(target);
         return target->onMouseUp(x, y, button);
     }
 
-    bool onMouseScroll(int x, int y, unsigned int direction) override {
-        if (!TEventHandler::onMouseScroll(x, y, direction)) return false;
+    TEventResult onMouseScroll(int x, int y, unsigned int direction) override {
+        TEventResult result = TEventHandler::onMouseScroll(x, y, direction);
+        if (result & TEventResult::Stop) return result;
         // Route the scroll event to the deepest scrollable box under the
         // cursor. Focus is intentionally NOT changed by scroll events.
         TBox* target = root->findScrollableAt(x, y);
         if (target) return target->onMouseScroll(x, y, direction);
-        return true;
+        return result;
     }
 
-    bool onResize(int cols, int rows) override {
-        if (!TEventHandler::onResize(cols, rows)) return false;
+    TEventResult onResize(int cols, int rows) override {
+        TEventResult result = TEventHandler::onResize(cols, rows);
+        if (result & TEventResult::Stop) return result;
         root->setSize(cols, rows);
         return root->onResize(cols, rows);
     }

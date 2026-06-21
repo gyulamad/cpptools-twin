@@ -1,5 +1,8 @@
 #pragma once
 
+#include <termios.h>
+#include <unistd.h>
+
 #include "TEventHandler.hpp"
 #include "TBox.hpp"
 #include "TTheme.hpp"
@@ -15,6 +18,13 @@ protected:
 public:
     TWindow(TTheme* theme = nullptr): theme(theme) {
         initscr();
+
+        // enable ctrl+s
+        struct termios tty;
+        tcgetattr(STDIN_FILENO, &tty);
+        tty.c_iflag &= ~IXON;
+        tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+
         start_color();
         cbreak();
         noecho();
@@ -27,6 +37,7 @@ public:
             ownTheme = true;
             this->theme = new TTheme();
         }
+
         short colorPair = this->theme->getWindowColorPair();
         root = new TBox(colorPair);
         root->setSize(COLS, LINES);

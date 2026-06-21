@@ -56,6 +56,13 @@ public:
         setScrollable(true);
     }
 
+    // Manual-position: for non-TBox ITScrollable targets (e.g. TColorChannel)
+    TScrollbar(TBox* attachParent, TBox* target, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII):
+        TBox(attachParent, width, height, top, left, colorPair), target(target), orientation(orientation), style(style)
+    {
+        setScrollable(true);
+    }
+
     void setTarget(TBox* t) {
         target = t;
         if (!t) return;

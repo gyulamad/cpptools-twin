@@ -167,18 +167,18 @@ public:
     }
 
     void setContents(const vector<string>& newContents) {
+        bool wasAtBottom = autoScroll && isScrollAtBottom();
         rawContents = newContents;
         applyWrap();
         dirty = true;
         recalculateBounds();
         clampScroll();
+        if (wasAtBottom)
+            scrollToBottom();
     }
 
     void setContents(const string& newContents) {
-        bool atBottom = isScrollAtBottom();
         setContents(explode("\n", newContents));
-        if (autoScroll && atBottom)
-            scrollToBottom();
     }
 
     void setColorPair(short colorPair) {
@@ -330,12 +330,15 @@ public:
         for (TBox* child_: children)
             if (child_ == child) return;
 
+        bool wasAtBottom = autoScroll && isScrollAtBottom();
         if (child->parent) child->parent->dirty = true;
         child->dirty = true;
         dirty = true;
         children.push_back(child);
         child->parent = this;
         recalculateBounds();
+        if (wasAtBottom)
+            scrollToBottom();
     }
 
     // -------------------------------------------------------

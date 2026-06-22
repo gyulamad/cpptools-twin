@@ -13,7 +13,7 @@ protected:
     bool ownTheme = false;
 //    TColorPairPalette palette;
     TBox* root = nullptr;
-    TBox* focus = nullptr;
+    TEventHandler* focus = nullptr;
 
 public:
     TWindow(TTheme* theme = nullptr): theme(theme) {
@@ -44,46 +44,31 @@ public:
         root->setSize(COLS, LINES);
     }
 
-
-    // TWindow(short colorIndex = COLOR_WHITE, short bgColorIndex = COLOR_BLACK)
-    // {
-    //     initscr();
-    //     start_color();
-    //     cbreak();
-    //     noecho();
-    //     keypad(stdscr, TRUE);
-    //     curs_set(0);
-    //     timeout(100);
-    //     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-
-    //     short colorPair = palette.getColorPair(colorIndex, bgColorIndex);
-    //     root = new TBox(colorPair);
-    //     root->setSize(COLS, LINES);
-    // }
-
-    // void init(short colorPair = -1) {
-    //     initscr();
-    //     start_color();
-    //     cbreak();
-    //     noecho();
-    //     keypad(stdscr, TRUE);
-    //     curs_set(0);
-    //     timeout(100);
-    //     mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-
-    //     if (colorPair == -1) colorPair = theme.getWindowColorPair();
-    //     root = new TBox(colorPair);
-    //     root->setSize(COLS, LINES);
-    // }
-
-    TTheme* getTheme() { return theme; }
-    // TColorPairPalette& getPalette() { return palette; }
-    TBox* getRoot() { return root; }
-
     virtual ~TWindow() {        
         delete root;
         if (ownTheme) delete theme;
         endwin();
+    }
+
+    TTheme* getTheme() { return theme; }
+    TBox* getRoot() { return root; }
+
+
+    void setFocus(TBox* box) {
+        if (focus == box) return;
+        if (focus) {
+            focus->setFocused(false);
+            focus->onFocusLeave();
+        }
+        focus = box;
+        if (focus) {
+            focus->setFocused(true);
+            focus->onFocusGain();
+        }
+    }
+
+    TEventHandler* getFocus() const {
+        return focus;
     }
     
 
@@ -167,23 +152,6 @@ protected:
         if (result & TEventResult::Stop) return result;
         root->setSize(cols, rows);
         return root->onResize(cols, rows);
-    }
-
-    void setFocus(TBox* box) {
-        if (focus == box) return;
-        if (focus) {
-            focus->setFocused(false);
-            focus->onFocusLeave();
-        }
-        focus = box;
-        if (focus) {
-            focus->setFocused(true);
-            focus->onFocusGain();
-        }
-    }
-
-    TBox* getFocus() const {
-        return focus;
     }
 
 private:

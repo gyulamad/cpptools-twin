@@ -33,8 +33,9 @@ protected:
     bool scrollable = false;
     int scrollSpeed = 3; // lines per scroll tick
     bool autoScroll = false;
+    bool autoGrow = false;
 
-public:
+ public:
 
     TBox(TBox* parent, short colorPair, vector<string> contents):
         parent(parent), width(0), height(contents.size()), top(0), left(0), colorPair(colorPair)
@@ -172,6 +173,7 @@ public:
         applyWrap();
         dirty = true;
         recalculateBounds();
+        applyAutoGrow();
         clampScroll();
         if (wasAtBottom)
             scrollToBottom();
@@ -229,7 +231,16 @@ public:
     void setAutoScroll(bool value) {
         autoScroll = value;
     }
-    
+
+    bool isAutoScroll() const { return autoScroll; }
+
+    void setAutoGrow(bool value) {
+        autoGrow = value;
+        if (autoGrow) applyAutoGrow();
+    }
+
+    bool isAutoGrow() const { return autoGrow; }
+
     void scrollToBottom() {
         setScrollTop(max(0, bottom - height + scrollPaddingBottom));
     }
@@ -337,6 +348,7 @@ public:
         children.push_back(child);
         child->parent = this;
         recalculateBounds();
+        applyAutoGrow();
         if (wasAtBottom)
             scrollToBottom();
     }
@@ -439,6 +451,22 @@ protected:
 
         bottom = max(contentBottom, childBottom);
         right  = max(contentRight,  childRight);
+    }
+
+    // When autoGrow is enabled, adjusts height/width to match content extent.
+    // If wrapText is also enabled, grows vertically only (height), keeping width fixed for wrapping.
+    void applyAutoGrow() {
+        if (!autoGrow) return;
+        int newHeight = bottom;
+        int newWidth  = wrapText ? width : right;
+        if (newHeight != height || newWidth != width) {
+            height = newHeight;
+            width  = newWidth;
+            dirty = true;
+            markChildrenDirty();
+            clampScroll();
+            if (parent) parent->recalculateBounds();
+        }
     }
 
     // Clamps current scroll values to the valid range.

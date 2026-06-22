@@ -2,6 +2,10 @@
 
 // DEPENDENCY: ncurses/ncurses
 
+// Define this to make drawing slow enough to visually test any
+// unnecessary/unwanted flickering and gliches:
+// #define SLOWMO_TEST 10
+
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -10,6 +14,10 @@
 #include "../misc/array_remove.hpp"
 #include "../misc/explode.hpp"
 #include "../misc/implode.hpp"
+
+#ifdef SLOWMO_TEST
+#include "../misc/sleep.hpp"
+#endif
 
 #include "ITScrollable.hpp"
 #include "TEventHandler.hpp"
@@ -658,6 +666,10 @@ private:
         getyx(stdscr, savedRow, savedCol);
         move(row, col);
         printw("%s", str);
+#ifdef SLOWMO_TEST
+        refresh();
+        sleep_ms(SLOWMO_TEST);
+#endif
         move(savedRow, savedCol);
     }
 

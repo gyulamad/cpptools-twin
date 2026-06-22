@@ -324,9 +324,13 @@ protected:
     // Returns the deepest scrollable descendant (or this box itself if
     // scrollable) that contains (x, y), or nullptr if none does.
     TBox* findScrollableAt(int x, int y) {
-        // No child claimed it — return this box if it can scroll
-        TBox* that = findMouseAt(x, y);
-        if (that && that->scrollable) return that;
+        TBox* hit = findMouseAt(x, y);
+        while (hit != nullptr) {
+            if (hit->scrollable) return hit;
+            // Walk up: only consider ancestors that also contain the point.
+            if (!hit->contains(x, y)) break;
+            hit = hit->parent;
+        }
         return nullptr;
     }
 

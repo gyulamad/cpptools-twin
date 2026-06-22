@@ -17,6 +17,7 @@ protected:
 
 public:
     TWindow(TTheme* theme = nullptr): theme(theme) {
+        setlocale(LC_ALL, ""); // <- Unicode fix?!
         initscr();
 
         // enable ctrl+s

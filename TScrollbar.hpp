@@ -19,8 +19,8 @@ public:
     };
 
     static constexpr Style ASCII    = { "|", "#", "^", "v", "-", "#", "<", ">" };
-    static constexpr Style UNICODE  = { "|", "█", "▲", "▼", "─", "█", "◄", "►" };
-
+    // static constexpr Style UNICODE  = { "|", "█", "▲", "▼", "─", "█", "◄", "►" };
+    static constexpr Style UNICODE  = { "│", "█", "▴", "▾", "─", "█", "◂", "▸" };
 private:
     ITScrollable* target      = nullptr;
     Orientation  orientation = VERTICAL;
@@ -33,7 +33,7 @@ private:
 
 public:
     // Auto-position: derives top/left/length from the target TBox
-    TScrollbar(TBox* target, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII): 
+    TScrollbar(TBox* target, short colorPair, Orientation orientation = VERTICAL, Style style = UNICODE): 
         TBox(nullptr, 0, 0, 0, 0, colorPair), orientation(orientation), style(style)
     {
         setParent(target->getParent());
@@ -42,7 +42,7 @@ public:
     }
 
     // Auto-position: derives top/left/length from the target TBox
-    TScrollbar(TBox* attachParent, TBox* target, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII): 
+    TScrollbar(TBox* attachParent, TBox* target, short colorPair, Orientation orientation = VERTICAL, Style style = UNICODE): 
         TBox(attachParent, 0, 0, 0, 0, colorPair), orientation(orientation), style(style)
     {
         setScrollable(true);
@@ -50,7 +50,7 @@ public:
     }
 
     // Manual-position: for non-TBox ITScrollable targets (e.g. TColorChannel)
-    TScrollbar(TBox* attachParent, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII):
+    TScrollbar(TBox* attachParent, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = UNICODE):
         TBox(attachParent, width, height, top, left, colorPair), target(nullptr), orientation(orientation), style(style)
     {
         setScrollable(true);
@@ -58,7 +58,7 @@ public:
 
     // Manual-position: with a TBox* target — subscribes to scroll changes
     // without overriding the manually-set position and size.
-    TScrollbar(TBox* attachParent, TBox* tTarget, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = ASCII):
+    TScrollbar(TBox* attachParent, TBox* tTarget, int width, int height, int top, int left, short colorPair, Orientation orientation = VERTICAL, Style style = UNICODE):
         TBox(attachParent, width, height, top, left, colorPair), target(tTarget), orientation(orientation), style(style)
     {
         setScrollable(true);

@@ -2,9 +2,11 @@
 #include "../../misc/ConsoleLogger.hpp"
 
 #ifdef TEST
+#include "test_NcursesScreen.hpp"
 #include "test_TBox.hpp"
 #include "test_TColorPair.hpp"
 #include "test_TColorPairPalette.hpp"
+#include "test_TEventResult.hpp"
 #include "test_TEventHandler.hpp"
 #include "test_TInput.hpp"
 #include "test_TScrollbar.hpp"

@@ -61,55 +61,60 @@ protected:
 public:
     using TWindow::TWindow;
 
-    // TWindowTester(short colorIndex, short bgColorIndex): 
-    //     TWindow(colorIndex, bgColorIndex), curY(0) {}
-
     virtual ~TWindowTester() {}
 
-    bool onKeyPress(int key, string name) override {
-        if (!TWindow::onKeyPress(key, name)) return false;
+    TEventResult onKeyPress(int key, string name) override {
+        TEventResult result = TWindow::onKeyPress(key, name);
+        if (result & TEventResult::Stop) return result;
         printEvent("Key: " + name + " (" + to_string(key) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onMouseMove(int x, int y) override {
-        if (!TWindow::onMouseMove(x, y)) return false;
+    TEventResult onMouseMove(int x, int y) override {
+        TEventResult result = TWindow::onMouseMove(x, y);
+        if (result & TEventResult::Stop) return result;
         printEvent("Mouse move: (" + to_string(x) + ", " + to_string(y) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
-        if (!TWindow::onMouseClick(x, y, button, repeat)) return false;
+    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        TEventResult result = TWindow::onMouseClick(x, y, button, repeat);
+        if (result & TEventResult::Stop) return result;
         printEvent("Click button(" + to_string(button) + ") x" + to_string(repeat) + " times at (" + to_string(x) + ", " + to_string(y) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onMouseDown(int x, int y, unsigned int button) override {
-        if (!TWindow::onMouseDown(x, y, button)) return false;
+    TEventResult onMouseDown(int x, int y, unsigned int button) override {
+        TEventResult result = TWindow::onMouseDown(x, y, button);
+        if (result & TEventResult::Stop) return result;
         printEvent("MouseDown " + to_string(button) + " at (" + to_string(x) + ", " + to_string(y) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onMouseUp(int x, int y, unsigned int button) override {
-        if (!TWindow::onMouseUp(x, y, button)) return false;
+    TEventResult onMouseUp(int x, int y, unsigned int button) override {
+        TEventResult result = TWindow::onMouseUp(x, y, button);
+        if (result & TEventResult::Stop) return result;
         printEvent("MouseUp " + to_string(button) + " at (" + to_string(x) + ", " + to_string(y) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onMouseScroll(int x, int y, unsigned int direction) override {
+    TEventResult onMouseScroll(int x, int y, unsigned int direction) override {
         // Let TWindow route to the appropriate box first
-        if (!TWindow::onMouseScroll(x, y, direction)) return false;
+        TEventResult result = TWindow::onMouseScroll(x, y, direction);
+        if (result & TEventResult::Stop) return result;
         printEvent("Scroll " + to_string(direction) + " at (" + to_string(x) + ", " + to_string(y) + ")");
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
-    bool onResize(int cols, int rows) override {
-        if (!TWindow::onResize(cols, rows)) return false;
+    TEventResult onResize(int cols, int rows) override {
+        TEventResult result = TWindow::onResize(cols, rows);
+        if (result & TEventResult::Stop) return result;
         printEvent("Resize: " + to_string(cols) + "x" + to_string(rows));
-        return true;
+        return TEventResult::Handled | TEventResult::Stop;
     }
 
     void printEvent(const string& msg) {
+        (void)msg; // suppress unused-parameter warning
         // root->setContents(root->getContents() + "\n" + msg);
         // mvprintw(curY, 0, "%s", msg.c_str());
         // curY++;
@@ -215,7 +220,7 @@ int main_test2() {
 int main(int argc, char** argv) {
     Arguments args(argc, argv);
     args.addHelp("func", "Add a test/example function");
-    string func = args.getopt<string>("func", "main_test2");
+    string func = args.getopt<string>("func", "main_test1");
     if (func == "main_test1") return main_test1();
     if (func == "main_test2") return main_test2();
     throw ERROR("--func argument is missing or invalid.");

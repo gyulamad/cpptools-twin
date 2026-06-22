@@ -99,24 +99,24 @@ protected:
     //---
 
     TBox(TBox* parent, short colorPair, const char* contents = nullptr):
-        TBox(parent, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(parent, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
 
     TBox(TBox* parent, int width, int height, short colorPair, const char* contents = nullptr): 
-        TBox(parent, width, height, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(parent, width, height, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
 
     TBox(TBox* parent, int width, int height, int top, int left, short colorPair, const char* contents = nullptr): 
-        TBox(parent, width, height, top, left, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(parent, width, height, top, left, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
  
     //---
 
     TBox(short colorPair, const char* contents = nullptr):
-        TBox(nullptr, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(nullptr, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
 
     TBox(int width, int height, short colorPair, const char* contents = nullptr): 
-        TBox(nullptr, width, height, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(nullptr, width, height, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
 
     TBox(int width, int height, int top, int left, short colorPair, const char* contents = nullptr): 
-        TBox(nullptr, width, height, top, left, colorPair, explode("\n", contents ? contents : "")) {}
+        TBox(nullptr, width, height, top, left, colorPair, contents ? explode("\n", contents) : vector<string>{}) {}
  
         
     virtual ~TBox() {}
@@ -180,7 +180,10 @@ protected:
     }
 
     void setContents(const string& newContents) {
-        setContents(explode("\n", newContents));
+        if (newContents.empty())
+            setContents(vector<string>{});
+        else
+            setContents(explode("\n", newContents));
     }
 
     void setColorPair(short colorPair) {

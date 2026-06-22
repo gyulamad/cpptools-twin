@@ -60,7 +60,7 @@ public:
         // Editor fills the full window
         editor = new TInput(getRoot(), COLS - 1, LINES - 2, 1, 0, cEditor);
         editor->setScrollable(true);
-        editor->setWrapText(true);
+        // editor->setWrapText(true);
 
         // Scrollbars attached to the right edge of the editor
         vsb = new TScrollbar(editor, cScrollbar, TScrollbar::VERTICAL);

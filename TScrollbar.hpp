@@ -19,8 +19,7 @@ public:
     };
 
     static constexpr Style ASCII    = { "|", "#", "^", "v", "-", "#", "<", ">" };
-    // static constexpr Style UNICODE  = { "|", "█", "▲", "▼", "─", "█", "◄", "►" };
-    static constexpr Style UNICODE  = { "│", "█", "▴", "▾", "─", "█", "◂", "▸" };
+    static constexpr Style UNICODE  = { " ", "⬢", "▴", "▾", " ", "⬢", "◂", "▸" };
 private:
     ITScrollable* target      = nullptr;
     Orientation  orientation = VERTICAL;

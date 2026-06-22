@@ -454,7 +454,6 @@ protected:
     }
 
     // When autoGrow is enabled, adjusts height/width to match content extent.
-    // If wrapText is also enabled, grows vertically only (height), keeping width fixed for wrapping.
     void applyAutoGrow() {
         if (!autoGrow) return;
         int newHeight = bottom;
@@ -465,7 +464,49 @@ protected:
             dirty = true;
             markChildrenDirty();
             clampScroll();
-            if (parent) parent->recalculateBounds();
+        }
+        notifyParentBoundsChange();
+    }
+
+    // Propagates a bounds change up the ancestor chain.
+    void notifyParentBoundsChange() {
+        TBox* node = parent;
+        while (node) {
+            bool wasAtBottom = node->autoScroll && node->isScrollAtBottom();
+
+            int oldBottom = node->bottom, oldRight  = node->right;
+            int oldHeight = node->height, oldWidth   = node->width;
+
+            // Recalculate from updated children/contents (reuses existing method)
+            node->recalculateBounds();
+
+            // Apply auto-grow on this ancestor
+            if (node->autoGrow) {
+                int gHeight = node->bottom;
+                int gWidth  = node->wrapText ? node->width : node->right;
+                if (gHeight != node->height || gWidth != node->width) {
+                    node->height = gHeight;
+                    node->width  = gWidth;
+                    node->dirty = true;
+                    node->markChildrenDirty();
+                }
+            }
+
+            // Clamp scroll and auto-scroll if anything changed
+            bool changed = (node->bottom != oldBottom || node->right != oldRight
+                         || node->height != oldHeight || node->width != oldWidth);
+            if (changed) {
+                int maxTop  = max(0, node->bottom - node->height + node->scrollPaddingBottom);
+                int maxLeft = max(0, node->right  - node->width  + node->scrollPaddingRight);
+                node->scrollTop  = max(0, min(node->scrollTop,  maxTop));
+                node->scrollLeft = max(0, min(node->scrollLeft, maxLeft));
+
+                if (wasAtBottom) {
+                    node->setScrollTop(max(0, node->bottom - node->height + node->scrollPaddingBottom));
+                }
+            }
+
+            node = node->parent;
         }
     }
 

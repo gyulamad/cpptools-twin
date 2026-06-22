@@ -16,7 +16,7 @@ public:
 
     TColorPairPalette& getPalette() { return palette; }
 
-    virtual short getWindowColorPair() { return getColorPair(COLOR_WHITE, COLOR_GREEN); }
+    virtual short getWindowColorPair() { return getColorPair(COLOR_WHITE, COLOR_BLACK); }
     virtual short getBoxColorPair() { return getColorPair(COLOR_BLACK, COLOR_GREEN); }
     virtual short getScrollbarColorPair() { return getColorPair(COLOR_WHITE, COLOR_BLUE); }
     virtual short getInputColorPair() { return getColorPair(COLOR_WHITE, COLOR_BLACK); }

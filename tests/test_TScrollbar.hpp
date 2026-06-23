@@ -127,4 +127,82 @@ TEST(test_TScrollbar_onMouseUp_clears_dragging) {
     NCURSES_TEARDOWN;
 }
 
+// ============================================================================
+// TScrollbar Tests - onMouseClick (click event handling)
+// ============================================================================
+
+TEST(test_TScrollbar_onMouseClick_arrow_up_decrements) {
+    NCURSES_SETUP;
+    // Use more lines than height so scrolling is possible (maxScroll = 8-5=3)
+    TBox target(10, 5, 5, 3, 1, vector<string>{"l1","l2","l3","l4","l5","l6","l7","l8"});
+    target.setScrollTop(2);
+    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    // Click at relative position 0 (arrow up) — absolute y = getTopAbsolute() + 0
+    int absY = sb.getTopAbsolute();
+    sb.onMouseClick(sb.getLeftAbsolute(), absY, 1, 1);
+    assert(target.getScrollTop() == 1 && "onMouseClick on arrow up should decrement scroll by 1");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TScrollbar_onMouseClick_arrow_down_increments) {
+    NCURSES_SETUP;
+    TBox target(10, 5, 5, 3, 1, vector<string>{"l1","l2","l3","l4","l5","l6","l7","l8"});
+    target.setScrollTop(2);
+    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    // Click at relative position barLen-1 (arrow down) — absolute y = getTopAbsolute() + height - 1
+    int absY = sb.getTopAbsolute() + sb.getHeight() - 1;
+    sb.onMouseClick(sb.getLeftAbsolute(), absY, 1, 1);
+    assert(target.getScrollTop() == 3 && "onMouseClick on arrow down should increment scroll by 1");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TScrollbar_onMouseClick_horizontal_arrow_left_decrements) {
+    NCURSES_SETUP;
+    // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
+    TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
+    target.setScrollLeft(2);
+    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    // Click at relative position 0 (left arrow) — absolute x = getLeftAbsolute() + 0
+    int absX = sb.getLeftAbsolute();
+    sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
+    assert(target.getScrollLeft() == 1 && "onMouseClick on left arrow should decrement scroll by 1");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TScrollbar_onMouseClick_horizontal_arrow_right_increments) {
+    NCURSES_SETUP;
+    // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
+    TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
+    target.setScrollLeft(2);
+    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    // Click at relative position barLen-1 (right arrow) — absolute x = getLeftAbsolute() + width - 1
+    int absX = sb.getLeftAbsolute() + sb.getWidth() - 1;
+    sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
+    assert(target.getScrollLeft() == 3 && "onMouseClick on right arrow should increment scroll by 1");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TScrollbar_onMouseClick_returns_handled) {
+    NCURSES_SETUP;
+    TBox target(20, 5, 5, 3, 1, vector<string>{"l1","l2","l3"});
+    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    int absX = sb.getLeftAbsolute();
+    TEventResult result = sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
+    assert(result & TEventResult::Handled && "onMouseClick should return Handled");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TScrollbar_onMouseClick_wrong_button_no_effect) {
+    NCURSES_SETUP;
+    // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
+    TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
+    target.setScrollLeft(2);
+    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    int absX = sb.getLeftAbsolute();
+    // Button 2 (middle click) should not change scroll value.
+    sb.onMouseClick(absX, sb.getTopAbsolute(), 2, 1);
+    assert(target.getScrollLeft() == 2 && "Non-button-1 click should not affect scroll");
+    NCURSES_TEARDOWN;
+}
+
 #endif

@@ -110,32 +110,15 @@ public:
    TEventResult onMouseDown(int x, int y, unsigned int button) override {
         TEventResult result = TBox::onMouseDown(x, y, button);
         if (result & TEventResult::Stop) return result;
-        if (button != 1 || !target) return result;
+        handleBarClick(x, y, button, true);
+        dirty = true;
+        return result | TEventResult::Handled;
+    }
 
-        int barLen = (orientation == VERTICAL) ? height : width;
-        computeThumb(barLen);
-
-        int rel = (orientation == VERTICAL)
-            ? (y - getTopAbsolute())
-            : (x - getLeftAbsolute());
-
-        if (rel == 0) {
-            target->setScrollValue(target->getScrollValue(orientation) - 1, orientation);
-        } else if (rel == barLen - 1) {
-            target->setScrollValue(target->getScrollValue(orientation) + 1, orientation);
-        } else if (rel >= thumbPos + 1 && rel < thumbPos + 1 + thumbSize) {
-            dragging   = true;
-            dragAnchor = (orientation == VERTICAL) ? y : x;
-            dragOrigin = target->getScrollValue(orientation);
-        } else {
-            // page scroll — jump by visible track length
-            int trackLen = max(1, barLen - 2);
-            int scroll   = target->getScrollValue(orientation);
-            target->setScrollValue(rel < thumbPos + 1
-                ? scroll - trackLen
-                : scroll + trackLen, orientation);
-        }
-
+    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int /*repeat*/) override {
+        TEventResult result = TBox::onMouseClick(x, y, button, /*repeat=*/1);
+        if (result & TEventResult::Stop) return result;
+        handleBarClick(x, y, button, false);
         dirty = true;
         return result | TEventResult::Handled;
     }
@@ -226,5 +209,38 @@ private:
         int scrollVal = target->getScrollValue(orientation) - scrollMin;
         thumbPos = scrollVal * (trackLen - thumbSize) / scrollRange;
         thumbPos = max(0, min(thumbPos, trackLen - thumbSize));
+    }
+
+    // Shared click handler for both onMouseDown and onMouseClick.
+    // When isPress is true (from onMouseDown), also start drag on thumb hit.
+    void handleBarClick(int x, int y, unsigned int button, bool isPress) {
+        if (button != 1 || !target) return;
+
+        int barLen = (orientation == VERTICAL) ? height : width;
+        computeThumb(barLen);
+
+        int rel = (orientation == VERTICAL)
+            ? (y - getTopAbsolute())
+            : (x - getLeftAbsolute());
+
+        if (rel == 0) {
+            target->setScrollValue(target->getScrollValue(orientation) - 1, orientation);
+        } else if (rel == barLen - 1) {
+            target->setScrollValue(target->getScrollValue(orientation) + 1, orientation);
+        } else if (isPress && rel >= thumbPos + 1 && rel < thumbPos + 1 + thumbSize) {
+            // On press: start dragging the thumb.
+            dragging   = true;
+            dragAnchor = (orientation == VERTICAL) ? y : x;
+            dragOrigin = target->getScrollValue(orientation);
+        } else if (!isPress && rel >= thumbPos + 1 && rel < thumbPos + 1 + thumbSize) {
+            // On click on thumb: no extra action (drag already handled by press).
+        } else {
+            // Page scroll — jump by visible track length.
+            int trackLen = max(1, barLen - 2);
+            int scroll   = target->getScrollValue(orientation);
+            target->setScrollValue(rel < thumbPos + 1
+                ? scroll - trackLen
+                : scroll + trackLen, orientation);
+        }
     }
 };

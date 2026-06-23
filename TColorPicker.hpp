@@ -142,8 +142,8 @@ private:
         if (valB) valB->setContents(makeLabel(to_string(b)));
 
         unsigned int rgb = ((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b;
-        // Dark background (< 0x88 on all channels) gets white text; light gets black.
-        int textColor = (r < 0x88 && g < 0x88 && b < 0x88) ? 0xFFFFFF : 0x000000;
+        // Dark background (< 0xNN on all channels) gets white text; light gets black.
+        int textColor = (r < 0xAA && g < 0xAA && b < 0xAA) ? 0xFFFFFF : 0x000000;
         short cp = m_palette.getColorPair(textColor, (int)rgb);
 
         preview->setColorPair(cp);

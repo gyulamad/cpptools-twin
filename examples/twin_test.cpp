@@ -13,6 +13,7 @@
 
 #include "../../misc/ERROR.hpp"
 #include "../../misc/Arguments.hpp"
+#include "../../misc/hex.hpp"
 
 #include "../../twin/ITScrollable.hpp"
 #include "../../twin/TColorPairPalette.hpp"
@@ -379,14 +380,11 @@ int main_test4() {
     // Shared callback: rebuild the preview color pair from current RGB values.
     auto updatePreview = [&]() {
         int r = chR.getValue(), g = chG.getValue(), b = chB.getValue();
-        short cp = theme->getPalette().getColorPair(
-            (r << 16) | (g << 8) | b, -1);
+        unsigned int rgb = ((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b;
+        short cp = theme->getPalette().getColorPair((int)rgb, -1);
 
         preview.setColorPair(cp);
-        const char* hexc = "0123456789ABCDEF";
-        hexColor = "#" + string(1, hexc[(r >> 4) & 0xF]) + string(1, hexc[r & 0xF]) +
-                         string(1, hexc[(g >> 4) & 0xF]) + string(1, hexc[g & 0xF]) +
-                         string(1, hexc[(b >> 4) & 0xF]) + string(1, hexc[b & 0xF]);
+        hexColor = "#" + uint2hex(rgb);
         preview.setContents(makeLabel(hexColor));
 
         if (valR) valR->setContents(makeLabel(to_string(r)));

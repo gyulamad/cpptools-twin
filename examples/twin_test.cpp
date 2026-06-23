@@ -20,6 +20,7 @@
 #include "../../twin/TWindow.hpp"
 #include "../../twin/TScrollbar.hpp"
 #include "../../twin/TInput.hpp"
+#include "../../twin/TColorPicker.hpp"
 
 using namespace std;
 
@@ -325,26 +326,6 @@ int main_test3() {
 // Color Picker Demo — true-color RGB picker with scrollbars
 // ============================================================================
 
-class TColorChannel : public ITScrollable {
-protected:
-    int value = 128;
-public:
-    ~TColorChannel() override {}
-
-    void setValue(int v) {
-        value = max(0, min(v, 255));
-        notifyScrollChange();
-    }
-    int getValue() const { return value; }
-
-    // ITScrollable interface — orientation is ignored (single-axis).
-    int getScrollValue(int /*orientation*/) const override { return value; }
-    int getScrollMin(int /*orientation*/)   const override { return 0; }
-    int getScrollMax(int /*orientation*/)   const override { return 255; }
-
-    void setScrollValue(int v, int /*orientation*/) override { setValue(v); }
-};
-
 int main_test4() {
     TWindow twin;
     TTheme* theme = twin.getTheme();
@@ -358,68 +339,10 @@ int main_test4() {
     (void)title; // suppress unused warning
 
     int startX = 6;  // left column for first channel group
+    int pickerW = 35; // total width of color picker widget
 
-    TColorChannel chR, chG, chB;
-    chR.setValue(0);
-    chG.setValue(0);
-    chB.setValue(255);
-
-    auto makeLabel = [&](const string& txt) -> vector<string> { return {txt}; };
-
-    int sbWidth = 20;  // horizontal scrollbar width
-    int lblX    = startX;
-    int sbStartX = startX + 3; // label is 2 chars + 1 space gap
-
-    // --- Preview box below scrollbars (width matches scrollbar, height=1) ---
-    string hexColor = "#0000FF";
-    TBox preview(twin.getRoot(), sbWidth, 1, 6, sbStartX, cTitle, hexColor);
-
-    // Forward-declare value label pointers so the callback can reference them.
-    TBox* valR = nullptr;
-    TBox* valG = nullptr;
-    TBox* valB = nullptr;
-
-    // Shared callback: rebuild the preview color pair from current RGB values.
-    auto updatePreview = [&]() {
-        int r = chR.getValue(), g = chG.getValue(), b = chB.getValue();
-        unsigned int rgb = ((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b;
-        short cp = theme->getPalette().getColorPair((int)rgb, -1);
-
-        preview.setColorPair(cp);
-        hexColor = "#" + uint2hex(rgb);
-        preview.setContents(makeLabel(hexColor));
-
-        if (valR) valR->setContents(makeLabel(to_string(r)));
-        if (valG) valG->setContents(makeLabel(to_string(g)));
-        if (valB) valB->setContents(makeLabel(to_string(b)));
-    };
-    chR.onScrollChangeSubscribe(updatePreview);
-    chG.onScrollChangeSubscribe(updatePreview);
-    chB.onScrollChangeSubscribe(updatePreview);
-
-    TBox lblR(twin.getRoot(), 2, 1, 3, lblX, cLabelR, makeLabel("R"));
-    TScrollbar sbR(twin.getRoot(), sbWidth, 1, 3, sbStartX, cSb, TScrollbar::HORIZONTAL);
-
-    TBox lblG(twin.getRoot(), 2, 1, 4, lblX, cLabelG, makeLabel("G"));
-    TScrollbar sbG(twin.getRoot(), sbWidth, 1, 4, sbStartX, cSb, TScrollbar::HORIZONTAL);
-
-    TBox lblB(twin.getRoot(), 2, 1, 5, lblX, cLabelB, makeLabel("B"));
-    TScrollbar sbB(twin.getRoot(), sbWidth, 1, 5, sbStartX, cSb, TScrollbar::HORIZONTAL);
-
-    // --- Value labels (update with current channel value) ---
-    valR = new TBox(twin.getRoot(), 4, 1, 3, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chR.getValue())));
-    valG = new TBox(twin.getRoot(), 4, 1, 4, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chG.getValue())));
-    valB = new TBox(twin.getRoot(), 4, 1, 5, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chB.getValue())));
-
-    // Wire scrollbars to their channels and set faster scroll speed.
-    sbR.setTarget(&chR);
-    sbR.setScrollSpeed(10);
-    sbG.setTarget(&chG);
-    sbG.setScrollSpeed(10);
-    sbB.setTarget(&chB);
-    sbB.setScrollSpeed(10);
-
-    updatePreview();
+    TColorPicker picker(twin.getRoot(), pickerW, 4, 2, startX, cLabelR, cLabelG, cLabelB, cSb, cTitle, theme->getPalette(), 0, 0, 255);
+    
     twin.loop();
 
     cout << "exited" << endl;

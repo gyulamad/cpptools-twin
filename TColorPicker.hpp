@@ -9,6 +9,8 @@
 
 using namespace std;
 
+// TODO: TColorChannel and TColorPicker need tests!
+
 class TColorChannel : public ITScrollable {
 protected:
     int value = 0;

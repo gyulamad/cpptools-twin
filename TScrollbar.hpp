@@ -101,7 +101,7 @@ public:
         TEventResult result = TBox::onMouseScroll(/*x=*/0, /*y=*/0, direction);
         if (result & TEventResult::Stop) return result;
         if (!target) return result;
-        int delta = (direction == 4) ? -1 : 1;
+        int delta = (direction == 4) ? -scrollSpeed : scrollSpeed;
         target->setScrollValue(target->getScrollValue(orientation) + delta, orientation);
         dirty = true;
         return result | TEventResult::Handled;

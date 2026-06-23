@@ -14,6 +14,8 @@
 #include "../../misc/ERROR.hpp"
 #include "../../misc/Arguments.hpp"
 
+#include "../../twin/ITScrollable.hpp"
+#include "../../twin/TColorPairPalette.hpp"
 #include "../../twin/TWindow.hpp"
 #include "../../twin/TScrollbar.hpp"
 #include "../../twin/TInput.hpp"
@@ -318,13 +320,125 @@ int main_test3() {
     return 0;
 }
 
+// ============================================================================
+// Color Picker Demo — true-color RGB picker with scrollbars
+// ============================================================================
+
+class TColorChannel : public ITScrollable {
+protected:
+    int value = 128;
+public:
+    ~TColorChannel() override {}
+
+    void setValue(int v) {
+        value = max(0, min(v, 255));
+        notifyScrollChange();
+    }
+    int getValue() const { return value; }
+
+    // ITScrollable interface — orientation is ignored (single-axis).
+    int getScrollValue(int /*orientation*/) const override { return value; }
+    int getScrollMin(int /*orientation*/)   const override { return 0; }
+    int getScrollMax(int /*orientation*/)   const override { return 255; }
+
+    void setScrollValue(int v, int /*orientation*/) override { setValue(v); }
+};
+
+int main_test4() {
+    TWindow twin;
+    TTheme* theme = twin.getTheme();
+    short cTitle     = theme->getPalette().getColorPair(0xFFFFFF, 0x000000);
+    short cLabelR    = theme->getPalette().getColorPair(0xFF4444, -1);
+    short cLabelG    = theme->getPalette().getColorPair(0x44FF44, -1);
+    short cLabelB    = theme->getPalette().getColorPair(0x4444FF, -1);
+    short cSb        = theme->getPalette().getColorPair(0xFFFFFF, 0x333333);
+
+    TBox title(twin.getRoot(), 50, 1, 0, 2, cTitle, "True-Color RGB Picker — scroll the bars");
+    (void)title; // suppress unused warning
+
+    int startX = 6;  // left column for first channel group
+    int gapX   = 18; // horizontal spacing (used for preview position)
+
+    TColorChannel chR, chG, chB;
+    chR.setValue(0);
+    chG.setValue(0);
+    chB.setValue(255);
+
+    auto makeLabel = [&](const string& txt) -> vector<string> { return {txt}; };
+
+    // Forward-declare value label pointers so the callback can reference them.
+    TBox* valR = nullptr;
+    TBox* valG = nullptr;
+    TBox* valB = nullptr;
+
+    // --- Preview box (updates on any channel change) ---
+    TBox preview(twin.getRoot(), 16, 8, 3, startX + gapX * 2 + 4, cTitle, "Preview");
+    string hexColor = "#0000FF";
+    preview.setContents(makeLabel(hexColor));
+
+    // Shared callback: rebuild the preview color pair from current RGB values.
+    auto updatePreview = [&]() {
+        int r = chR.getValue(), g = chG.getValue(), b = chB.getValue();
+        short cp = theme->getPalette().getColorPair(
+            (r << 16) | (g << 8) | b, -1);
+
+        preview.setColorPair(cp);
+        const char* hexc = "0123456789ABCDEF";
+        hexColor = "#" + string(1, hexc[(r >> 4) & 0xF]) + string(1, hexc[r & 0xF]) +
+                         string(1, hexc[(g >> 4) & 0xF]) + string(1, hexc[g & 0xF]) +
+                         string(1, hexc[(b >> 4) & 0xF]) + string(1, hexc[b & 0xF]);
+        preview.setContents(makeLabel(hexColor));
+
+        if (valR) valR->setContents(makeLabel(to_string(r)));
+        if (valG) valG->setContents(makeLabel(to_string(g)));
+        if (valB) valB->setContents(makeLabel(to_string(b)));
+    };
+    chR.onScrollChangeSubscribe(updatePreview);
+    chG.onScrollChangeSubscribe(updatePreview);
+    chB.onScrollChangeSubscribe(updatePreview);
+
+    // --- Channel labels next to each horizontal scrollbar (stacked at top) ---
+    int sbWidth = 20;  // horizontal scrollbar width
+    int lblX    = startX;
+    int sbStartX = startX + 3; // label is 2 chars + 1 space gap
+
+    TBox lblR(twin.getRoot(), 2, 1, 3, lblX, cLabelR, makeLabel("R"));
+    TScrollbar sbR(twin.getRoot(), sbWidth, 1, 3, sbStartX, cSb, TScrollbar::HORIZONTAL);
+
+    TBox lblG(twin.getRoot(), 2, 1, 4, lblX, cLabelG, makeLabel("G"));
+    TScrollbar sbG(twin.getRoot(), sbWidth, 1, 4, sbStartX, cSb, TScrollbar::HORIZONTAL);
+
+    TBox lblB(twin.getRoot(), 2, 1, 5, lblX, cLabelB, makeLabel("B"));
+    TScrollbar sbB(twin.getRoot(), sbWidth, 1, 5, sbStartX, cSb, TScrollbar::HORIZONTAL);
+
+    // --- Value labels (update with current channel value) ---
+    valR = new TBox(twin.getRoot(), 4, 1, 3, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chR.getValue())));
+    valG = new TBox(twin.getRoot(), 4, 1, 4, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chG.getValue())));
+    valB = new TBox(twin.getRoot(), 4, 1, 5, sbStartX + sbWidth + 2, cTitle, makeLabel(to_string(chB.getValue())));
+
+    // Wire scrollbars to their channels and set faster scroll speed.
+    sbR.setTarget(&chR);
+    sbR.setScrollSpeed(10);
+    sbG.setTarget(&chG);
+    sbG.setScrollSpeed(10);
+    sbB.setTarget(&chB);
+    sbB.setScrollSpeed(10);
+
+    updatePreview();
+    twin.loop();
+
+    cout << "exited" << endl;
+    return 0;
+}
+
 
 int main(int argc, char** argv) {
     Arguments args(argc, argv);
     args.addHelp("func", "Add a test/example function");
-    string func = args.getopt<string>("func", "main_test3");
+    string func = args.getopt<string>("func", "main_test4");
     if (func == "main_test1") return main_test1();
     if (func == "main_test2") return main_test2();
     if (func == "main_test3") return main_test3();
+    if (func == "main_test4") return main_test4();
     throw ERROR("--func argument is missing or invalid.");
 }

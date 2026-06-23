@@ -2,11 +2,13 @@
 
 class TColorPair {
 protected:
-    short colorIndex, bgColorIndex;
+    // RGB values as 0xRRGGBB integers (or -1 for default/transparent).
+    int fgRgb, bgRgb;
 public:
-    TColorPair(short colorIndex, short bgColorIndex): colorIndex(colorIndex), bgColorIndex(bgColorIndex) {}
+    TColorPair(int fgRgb, int bgRgb): fgRgb(fgRgb), bgRgb(bgRgb) {}
     virtual ~TColorPair() {}
-    bool operator==(const TColorPair& other) {
-        return colorIndex == other.colorIndex && bgColorIndex == other.bgColorIndex;
+
+    bool operator==(const TColorPair& other) const {
+        return fgRgb == other.fgRgb && bgRgb == other.bgRgb;
     }
 };

@@ -14,11 +14,14 @@ protected:
 //    TColorPairPalette palette;
     TBox* root = nullptr;
     TEventHandler* focus = nullptr;
+    SCREEN* screen = nullptr;
 
 public:
     TWindow(TTheme* theme = nullptr): theme(theme) {
         setlocale(LC_ALL, ""); // <- Unicode fix?!
-        initscr();
+        this->screen = newterm("xterm-direct", stdout, stdin);
+        if (!this->screen) throw ERROR("Failed to initialize xterm-direct terminal");
+        set_term(this->screen);
 
         // enable ctrl+s
         struct termios tty;
@@ -27,6 +30,7 @@ public:
         tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 
         start_color();
+        use_default_colors(); // -1 = terminal default background (needed for true color)
         cbreak();
         noecho();
         keypad(stdscr, TRUE);
@@ -48,6 +52,7 @@ public:
         delete root;
         if (ownTheme) delete theme;
         endwin();
+        delscreen(this->screen);
     }
 
     TTheme* getTheme() { return theme; }

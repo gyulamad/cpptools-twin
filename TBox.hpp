@@ -376,7 +376,7 @@ protected:
         TEventResult result = TEventHandler::onKeyPress(key, name);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        // NOTE: implement universal event handlings here if necessary
 
         return result;
     }
@@ -385,7 +385,7 @@ protected:
         TEventResult result = TEventHandler::onMouseMove(x, y);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        // NOTE: implement universal event handlings here if necessary
 
         return result;
     }
@@ -394,7 +394,7 @@ protected:
         TEventResult result = TEventHandler::onMouseClick(x, y, button, repeat);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        // NOTE: implement universal event handlings here if necessary
 
         return result;
     }
@@ -403,7 +403,7 @@ protected:
         TEventResult result = TEventHandler::onMouseDown(x, y, button);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        // NOTE: implement universal event handlings here if necessary
 
         return result;
     }
@@ -412,7 +412,7 @@ protected:
         TEventResult result = TEventHandler::onMouseUp(x, y, button);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        // NOTE: implement universal event handlings here if necessary
 
         return result;
     }
@@ -540,7 +540,7 @@ protected:
         scrollLeft = max(0, min(scrollLeft, maxScrollLeft));
     }
 
-    virtual void redraw() { // TODO: = 0;
+    virtual void redraw() {
         attron(COLOR_PAIR(colorPair));
 
         // Absolute bounds of this box

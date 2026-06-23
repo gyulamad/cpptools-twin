@@ -352,7 +352,7 @@ protected:
         dirty = false;
     }
 
-    void addChild(TBox* child) {
+    virtual void addChild(TBox* child) {
         for (TBox* child_: children)
             if (child_ == child) return;
 

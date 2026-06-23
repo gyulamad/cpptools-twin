@@ -63,9 +63,9 @@ public:
         // editor->setWrapText(true);
 
         // Scrollbars attached to the right edge of the editor
-        vsb = new TScrollbar(editor, cScrollbar, TScrollbar::VERTICAL);
+        vsb = new TScrollbar(editor, cScrollbar, TOrientation::VERTICAL);
         // hsb = new TScrollbar(editor, cScrollbar, TScrollbar::HORIZONTAL);
-        hsb = new TScrollbar(getRoot(), editor, 20, 1, LINES - 1, COLS - 20, cScrollbar, TScrollbar::HORIZONTAL);
+        hsb = new TScrollbar(getRoot(), editor, 20, 1, LINES - 1, COLS - 20, cScrollbar, TOrientation::HORIZONTAL);
 
         status = new TBox(getRoot(), COLS - 20, 1, LINES - 1, 0, cStatus);
 

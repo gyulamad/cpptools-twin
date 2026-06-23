@@ -14,7 +14,7 @@
 TEST(test_TScrollbar_vertical_auto_positions_after_target) {
     NCURSES_SETUP;
     TBox target(20, 10, 5, 3, 1, vector<string>{"line1", "line2"});
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // Vertical: top=target.top=5, left=target.left+target.width=3+20=23
     assert(sb.getTop() == 5 && "Vertical scrollbar should be at target's top");
     assert(sb.getLeft() == 23 && "Vertical scrollbar should be right of target");
@@ -25,7 +25,7 @@ TEST(test_TScrollbar_vertical_auto_positions_after_target) {
 TEST(test_TScrollbar_horizontal_auto_positions_below_target) {
     NCURSES_SETUP;
     TBox target(20, 10, 5, 3, 1, vector<string>{"line1", "line2"});
-    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    TScrollbar sb(&target, 1, TOrientation::HORIZONTAL);
     // Horizontal: top=target.top+target.height=5+10=15, left=target.left=3
     assert(sb.getTop() == 15 && "Horizontal scrollbar should be below target");
     assert(sb.getLeft() == 3 && "Horizontal scrollbar should be at target's left");
@@ -36,7 +36,7 @@ TEST(test_TScrollbar_horizontal_auto_positions_below_target) {
 TEST(test_TScrollbar_is_scrollable_by_default) {
     NCURSES_SETUP;
     TBox target(20, 10, 5, 3, 1, {"line1"});
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     assert(sb.isScrollable() && "TScrollbar should be scrollable by default");
     NCURSES_TEARDOWN;
 }
@@ -44,7 +44,7 @@ TEST(test_TScrollbar_is_scrollable_by_default) {
 TEST(test_TScrollbar_manual_position_constructor) {
     NCURSES_SETUP;
     TBox parent(40, 25, 0, 0, 1, "");
-    TScrollbar sb(&parent, &parent, 1, 10, 20, 3, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&parent, &parent, 1, 10, 20, 3, 1, VERTICAL);
     assert(sb.getWidth() == 1 && "Width should be 1");
     assert(sb.getHeight() == 10 && "Height should be 10");
     assert(sb.getTop() == 20 && "Top should be 20");
@@ -55,7 +55,7 @@ TEST(test_TScrollbar_manual_position_constructor) {
 TEST(test_TScrollbar_setStyle_updates_style) {
     NCURSES_SETUP;
     TBox target(20, 10, 5, 3, 1, vector<string>{"line1"});
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // setStyle is public and accepts a Style struct — verify no exception on call.
     sb.setStyle(TScrollbar::ASCII);
     assert(sb.getWidth() == 1 && "Scrollbar should still be valid after style change");
@@ -81,7 +81,7 @@ TEST(test_TScrollbar_ascii_style_constant_values) {
 TEST(test_TScrollbar_onMouseScroll_changes_target_scroll) {
     NCURSES_SETUP;
     TBox target(10, 3, 5, 3, 1, {"line1", "line2", "line3", "line4"});
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     int initialScroll = target.getScrollTop();
     // direction 5 = wheel down -> increment scroll
     sb.onMouseScroll(0, 0, 5);
@@ -94,7 +94,7 @@ TEST(test_TScrollbar_onMouseScroll_up_decrements) {
     TBox target(10, 3, 5, 3, 1, {"line1", "line2", "line3", "line4"});
     // Set scroll to middle first
     target.setScrollTop(1);
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // direction 4 = wheel up -> decrement scroll
     sb.onMouseScroll(0, 0, 4);
     assert(target.getScrollTop() == 0 && "Wheel up should decrement scrollTop by 1");
@@ -107,7 +107,7 @@ TEST(test_TScrollbar_onMouseDown_arrow_up_decrements) {
     TBox target(10, 5, 5, 3, 1, vector<string>{"l1","l2","l3","l4","l5","l6","l7","l8"});
     target.setScrollTop(2);
     assert(target.getScrollTop() == 2 && "scrollTop should be settable to 2");
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // Click at relative position 0 (arrow up) - absolute y = getTopAbsolute() + 0
     int absY = sb.getTopAbsolute();
     sb.onMouseDown(sb.getLeftAbsolute(), absY, 1);
@@ -118,7 +118,7 @@ TEST(test_TScrollbar_onMouseDown_arrow_up_decrements) {
 TEST(test_TScrollbar_onMouseUp_clears_dragging) {
     NCURSES_SETUP;
     TBox target(20, 10, 5, 3, 1, {"line1"});
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // Simulate drag start then release
     int absY = sb.getTopAbsolute() + 2;
     sb.onMouseDown(sb.getLeftAbsolute(), absY, 1);
@@ -136,7 +136,7 @@ TEST(test_TScrollbar_onMouseClick_arrow_up_decrements) {
     // Use more lines than height so scrolling is possible (maxScroll = 8-5=3)
     TBox target(10, 5, 5, 3, 1, vector<string>{"l1","l2","l3","l4","l5","l6","l7","l8"});
     target.setScrollTop(2);
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // Click at relative position 0 (arrow up) — absolute y = getTopAbsolute() + 0
     int absY = sb.getTopAbsolute();
     sb.onMouseClick(sb.getLeftAbsolute(), absY, 1, 1);
@@ -148,7 +148,7 @@ TEST(test_TScrollbar_onMouseClick_arrow_down_increments) {
     NCURSES_SETUP;
     TBox target(10, 5, 5, 3, 1, vector<string>{"l1","l2","l3","l4","l5","l6","l7","l8"});
     target.setScrollTop(2);
-    TScrollbar sb(&target, 1, TScrollbar::VERTICAL);
+    TScrollbar sb(&target, 1, VERTICAL);
     // Click at relative position barLen-1 (arrow down) — absolute y = getTopAbsolute() + height - 1
     int absY = sb.getTopAbsolute() + sb.getHeight() - 1;
     sb.onMouseClick(sb.getLeftAbsolute(), absY, 1, 1);
@@ -161,7 +161,7 @@ TEST(test_TScrollbar_onMouseClick_horizontal_arrow_left_decrements) {
     // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
     TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
     target.setScrollLeft(2);
-    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    TScrollbar sb(&target, 1, TOrientation::HORIZONTAL);
     // Click at relative position 0 (left arrow) — absolute x = getLeftAbsolute() + 0
     int absX = sb.getLeftAbsolute();
     sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
@@ -174,7 +174,7 @@ TEST(test_TScrollbar_onMouseClick_horizontal_arrow_right_increments) {
     // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
     TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
     target.setScrollLeft(2);
-    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    TScrollbar sb(&target, 1, TOrientation::HORIZONTAL);
     // Click at relative position barLen-1 (right arrow) — absolute x = getLeftAbsolute() + width - 1
     int absX = sb.getLeftAbsolute() + sb.getWidth() - 1;
     sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
@@ -185,7 +185,7 @@ TEST(test_TScrollbar_onMouseClick_horizontal_arrow_right_increments) {
 TEST(test_TScrollbar_onMouseClick_returns_handled) {
     NCURSES_SETUP;
     TBox target(20, 5, 5, 3, 1, vector<string>{"l1","l2","l3"});
-    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    TScrollbar sb(&target, 1, TOrientation::HORIZONTAL);
     int absX = sb.getLeftAbsolute();
     TEventResult result = sb.onMouseClick(absX, sb.getTopAbsolute(), 1, 1);
     assert(result & TEventResult::Handled && "onMouseClick should return Handled");
@@ -197,7 +197,7 @@ TEST(test_TScrollbar_onMouseClick_wrong_button_no_effect) {
     // Content wider than box so horizontal scrolling is possible (right=30, maxScroll=10).
     TBox target(20, 5, 5, 3, 1, vector<string>{"this_is_a_very_long_line_of_text_for_testing"});
     target.setScrollLeft(2);
-    TScrollbar sb(&target, 1, TScrollbar::HORIZONTAL);
+    TScrollbar sb(&target, 1, TOrientation::HORIZONTAL);
     int absX = sb.getLeftAbsolute();
     // Button 2 (middle click) should not change scroll value.
     sb.onMouseClick(absX, sb.getTopAbsolute(), 2, 1);

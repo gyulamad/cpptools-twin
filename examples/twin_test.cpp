@@ -15,9 +15,11 @@
 #include "../../misc/Arguments.hpp"
 
 #include "../../twin/TColorPairPalette.hpp"
+#include "../../twin/TOrientation.hpp"
 #include "../../twin/TWindow.hpp"
 #include "../../twin/TScrollbar.hpp"
 #include "../../twin/TInput.hpp"
+#include "../../twin/TLineup.hpp"
 
 using namespace std;
 
@@ -188,13 +190,13 @@ int main_test1() {
         // text.getHeight(),               // same height as target box
         &text,
         cScrollbar,
-        TScrollbar::VERTICAL
-    );
-    
-    TScrollbar hsb1(
-        &text,
-        cScrollbar,
-        TScrollbar::HORIZONTAL
+        VERTICAL
+     );
+     
+     TScrollbar hsb1(
+         &text,
+         cScrollbar,
+         HORIZONTAL
     );
 
 
@@ -319,8 +321,42 @@ int main_test3() {
     return 0;
 }
 
+
 int main_test4() {
-    // TODO;
+    TWindow twin;
+    TTheme* theme = twin.getTheme();
+    short cTitle   = theme->getPalette().getColorPair(COLOR_YELLOW, COLOR_BLACK);
+    short cHLineup = theme->getPalette().getColorPair(COLOR_BLACK, COLOR_CYAN);
+    short cVLineup = theme->getPalette().getColorPair(COLOR_BLACK, COLOR_MAGENTA);
+    short cBox1    = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_BLUE);
+    short cBox2    = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_GREEN);
+    short cBox3    = theme->getPalette().getColorPair(COLOR_BLACK, COLOR_YELLOW);
+    short cBox4    = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_RED);
+
+    // --- Title ---
+    TBox title(twin.getRoot(), 50, 1, 0, 2, cTitle, "TLineup Demo — HORIZONTAL and VERTICAL layouts");
+
+    // --- Horizontal Lineup: boxes placed side by side ---
+    TLineup hLineup(twin.getRoot(), cHLineup, HORIZONTAL);
+    hLineup.setPosition(3, 2);
+    hLineup.setGap(1);
+
+    TBox hb1(&hLineup, 15, 3, cBox1, "[HB1] Hello!");
+    TBox hb2(&hLineup, 15, 4, cBox2, "[HB2] Side-by-side layout");
+    TBox hb3(&hLineup, 20, 2, cBox3, "[HB3] Auto-positioned");
+
+    // --- Vertical Lineup: boxes stacked top to bottom ---
+    TLineup vLineup(twin.getRoot(), cVLineup, VERTICAL);
+    vLineup.setPosition(8, 2);
+    vLineup.setGap(1);
+
+    TBox vb1(&vLineup, 25, 2, cBox1, "[VB1] Stacked vertically\nFirst item");
+    TBox vb2(&vLineup, 30, 3, cBox2, "[VB2] Middle item\nWith multiple\nLines here");
+    TBox vb3(&vLineup, 20, 2, cBox4, "[VB3] Last item in lineup");
+
+    twin.loop();
+
+    cout << "exited" << endl;
     return 0;
 }
 

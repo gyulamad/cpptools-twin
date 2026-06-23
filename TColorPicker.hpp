@@ -69,7 +69,7 @@ public:
         TBox* lblR = new TBox(this, channelLabelW, 1, 0, 0, cLabelR, makeLabel("R"));
         lblR->setPosition(0, 0);
         
-        sbR = new TScrollbar(this, sbWidth, 1, 0, channelLabelW + sbGapBefore, cSb, TScrollbar::HORIZONTAL);
+        sbR = new TScrollbar(this, sbWidth, 1, 0, channelLabelW + sbGapBefore, cSb, HORIZONTAL);
         
         valR = new TBox(this, valW, 1, 0, channelLabelW + sbGapBefore + sbWidth + valGapAfter, cPreview, makeLabel(to_string(initialR)));
         valR->setPosition(0, channelLabelW + sbGapBefore + sbWidth + valGapAfter);
@@ -77,7 +77,7 @@ public:
         TBox* lblG = new TBox(this, channelLabelW, 1, 0, 0, cLabelG, makeLabel("G"));
         lblG->setPosition(1, 0);
         
-        sbG = new TScrollbar(this, sbWidth, 1, 1, channelLabelW + sbGapBefore, cSb, TScrollbar::HORIZONTAL);
+        sbG = new TScrollbar(this, sbWidth, 1, 1, channelLabelW + sbGapBefore, cSb, HORIZONTAL);
         
         valG = new TBox(this, valW, 1, 0, channelLabelW + sbGapBefore + sbWidth + valGapAfter, cPreview, makeLabel(to_string(initialG)));
         valG->setPosition(1, channelLabelW + sbGapBefore + sbWidth + valGapAfter);
@@ -85,7 +85,7 @@ public:
         TBox* lblB = new TBox(this, channelLabelW, 1, 0, 0, cLabelB, makeLabel("B"));
         lblB->setPosition(2, 0);
         
-        sbB = new TScrollbar(this, sbWidth, 1, 2, channelLabelW + sbGapBefore, cSb, TScrollbar::HORIZONTAL);
+        sbB = new TScrollbar(this, sbWidth, 1, 2, channelLabelW + sbGapBefore, cSb, HORIZONTAL);
         
         valB = new TBox(this, valW, 1, 0, channelLabelW + sbGapBefore + sbWidth + valGapAfter, cPreview, makeLabel(to_string(initialB)));
         valB->setPosition(2, channelLabelW + sbGapBefore + sbWidth + valGapAfter);

@@ -1,8 +1,8 @@
-// Build and run: ./builder notepad.cpp --mode=strict [--run --pty]
-// Usage: ./notepad <filename>  (or leave empty for a new untitled document)
+// Build and run: ./builder editor.cpp --mode=strict [--run --pty]
+// Usage: ./editor <filename>  (or leave empty for a new untitled document)
 
 // To test CTRL+S use IXON:
-// stty -ixon && .notepad <filename>
+// stty -ixon && .editor <filename>
 
 // DEPENDENCY: ncurses/ncurses
 
@@ -22,7 +22,7 @@
 using namespace std;
 
 
-class NotepadApp: public TWindow {
+class EditorApp: public TWindow {
 protected:
     string filename;
     bool modified = false;
@@ -34,7 +34,7 @@ protected:
     TBox* wrapbtn = nullptr;
 
 public:
-    NotepadApp(const string& filename): TWindow(), filename(filename) {
+    EditorApp(const string& filename): TWindow(), filename(filename) {
         if (filename.empty() || !file_exists(filename))
             throw ERROR("File not found");
 
@@ -78,7 +78,7 @@ public:
         loop();
     }
 
-    virtual ~NotepadApp() override {
+    virtual ~EditorApp() override {
         delete status;
         delete vsb;
         delete hsb;
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     args.addHelp(1, "file", "Path to the file to open");
     string filename = args.get<string>(1);
 
-    NotepadApp app(filename);
+    EditorApp app(filename);
 
     return 0;
 }

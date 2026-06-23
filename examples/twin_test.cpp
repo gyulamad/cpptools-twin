@@ -358,7 +358,6 @@ int main_test4() {
     (void)title; // suppress unused warning
 
     int startX = 6;  // left column for first channel group
-    int gapX   = 18; // horizontal spacing (used for preview position)
 
     TColorChannel chR, chG, chB;
     chR.setValue(0);
@@ -367,15 +366,18 @@ int main_test4() {
 
     auto makeLabel = [&](const string& txt) -> vector<string> { return {txt}; };
 
+    int sbWidth = 20;  // horizontal scrollbar width
+    int lblX    = startX;
+    int sbStartX = startX + 3; // label is 2 chars + 1 space gap
+
+    // --- Preview box below scrollbars (width matches scrollbar, height=1) ---
+    string hexColor = "#0000FF";
+    TBox preview(twin.getRoot(), sbWidth, 1, 6, sbStartX, cTitle, hexColor);
+
     // Forward-declare value label pointers so the callback can reference them.
     TBox* valR = nullptr;
     TBox* valG = nullptr;
     TBox* valB = nullptr;
-
-    // --- Preview box (updates on any channel change) ---
-    TBox preview(twin.getRoot(), 16, 8, 3, startX + gapX * 2 + 4, cTitle, "Preview");
-    string hexColor = "#0000FF";
-    preview.setContents(makeLabel(hexColor));
 
     // Shared callback: rebuild the preview color pair from current RGB values.
     auto updatePreview = [&]() {
@@ -394,11 +396,6 @@ int main_test4() {
     chR.onScrollChangeSubscribe(updatePreview);
     chG.onScrollChangeSubscribe(updatePreview);
     chB.onScrollChangeSubscribe(updatePreview);
-
-    // --- Channel labels next to each horizontal scrollbar (stacked at top) ---
-    int sbWidth = 20;  // horizontal scrollbar width
-    int lblX    = startX;
-    int sbStartX = startX + 3; // label is 2 chars + 1 space gap
 
     TBox lblR(twin.getRoot(), 2, 1, 3, lblX, cLabelR, makeLabel("R"));
     TScrollbar sbR(twin.getRoot(), sbWidth, 1, 3, sbStartX, cSb, TScrollbar::HORIZONTAL);

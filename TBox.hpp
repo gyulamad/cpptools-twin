@@ -160,8 +160,8 @@ protected:
         markChildrenDirty();
         // Re-clamp scroll since the visible area changed
         clampScroll();
-        // Notify parent: our footprint may have changed
-        if (parent) parent->recalculateBounds();
+        // Notify parent chain: our footprint may have changed (grow or shrink)
+        notifyParentBoundsChange();
     }
     
     void setPosition(int top, int left) {
@@ -169,8 +169,8 @@ protected:
         this->left = left;
         if (parent) {
             parent->dirty = true;
-            parent->recalculateBounds();
         }
+        notifyParentBoundsChange();
         dirty = true;
         markChildrenDirty();
     }
@@ -495,15 +495,13 @@ protected:
             // Recalculate from updated children/contents (reuses existing method)
             node->recalculateBounds();
 
-            // Apply auto-grow on this ancestor
+            // Apply auto-grow on this ancestor if enabled
             if (node->autoGrow) {
                 int gHeight = node->bottom;
                 int gWidth  = node->wrapText ? node->width : node->right;
                 if (gHeight != node->height || gWidth != node->width) {
                     node->height = gHeight;
                     node->width  = gWidth;
-                    node->dirty = true;
-                    node->markChildrenDirty();
                 }
             }
 
@@ -520,6 +518,10 @@ protected:
                     node->setScrollTop(max(0, node->bottom - node->height + node->scrollPaddingBottom));
                 }
             }
+
+            // Always mark dirty so the ancestor redraws with updated child layout.
+            node->dirty = true;
+            node->markChildrenDirty();
 
             node = node->parent;
         }
@@ -685,6 +687,7 @@ private:
         child->parent = nullptr;
         dirty = true;
         recalculateBounds();
-        clampScroll();
+        applyAutoGrow(); // shrink if auto-grow enabled
+        notifyParentBoundsChange(); // cascade up the chain
     }
 };

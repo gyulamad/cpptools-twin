@@ -3,9 +3,12 @@
 
 // DEPENDENCY: ncurses/ncurses
 
+#include <cstring>
+#include <functional>
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <vector>
 #include <ncursesw/ncurses.h>
 
 #include "../../misc/ERROR.hpp"
@@ -217,11 +220,128 @@ int main_test2() {
     return 0;
 }
 
+// ============================================================================
+// Auto-Grow/Shrink Demo — visual test with clickable buttons
+// ============================================================================
+
+class TAutoGrowWindow : public TWindow {
+protected:
+    function<void(int, int)> onClickCallback;
+
+public:
+    using TWindow::TWindow;
+    virtual ~TAutoGrowWindow() {}
+
+    void setOnClick(function<void(int, int)> fn) {
+        onClickCallback = fn;
+    }
+
+    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
+        if (onClickCallback) onClickCallback(x, y);
+        return TWindow::onMouseClick(x, y, button, repeat);
+    }
+};
+
+int main_test3() {
+    TAutoGrowWindow twin;
+    TTheme* theme = twin.getTheme();
+    short cButton   = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_BLUE);
+    short cContainer= theme->getPalette().getColorPair(COLOR_BLACK, COLOR_CYAN);
+    short cTitle    = theme->getPalette().getColorPair(COLOR_YELLOW, COLOR_BLACK);
+
+    // Distinct background colors via palette so each child is visually obvious.
+    TColorPairPalette& pal = theme->getPalette();
+    static const pair<short, short> s_colorPairs[] = {
+        {COLOR_WHITE, COLOR_RED},
+        {COLOR_WHITE, COLOR_GREEN},
+        {COLOR_BLACK, COLOR_YELLOW},
+        {COLOR_WHITE, COLOR_BLUE},
+        {COLOR_WHITE, COLOR_MAGENTA},
+        {COLOR_BLACK, COLOR_CYAN},
+    };
+    constexpr size_t s_numColors = sizeof(s_colorPairs) / sizeof(s_colorPairs[0]);
+
+    // --- Title & status (fixed at top of screen) ---
+    TBox title(twin.getRoot(), 50, 1, 0, 2, cTitle, "Auto-Grow/Shrink Demo — click buttons");
+    TBox statusLine(twin.getRoot(), 60, 1, 3, 2, cTitle, "");
+
+    // --- Container: auto-grow box that holds children ---
+    TBox container(40, 5, 5, 2, cContainer, vector<string>{});
+    container.setAutoGrow(true);
+    twin.getRoot()->addChild(&container);
+
+    // --- Buttons inside the container (row at top) ---
+    const char* btnLabels[] = {"[Add Right]", "[Remove Rgt]", "[Add Bottom]", "[Remove Bot]"};
+    vector<TBox*> buttons;
+    int xPos = 0;
+    for (int i = 0; i < 4; ++i) {
+        TBox* btn = new TBox(&container, (int)strlen(btnLabels[i]), 1, cButton, btnLabels[i]);
+        btn->setPosition(0, xPos);
+        buttons.push_back(btn);
+        xPos += strlen(btnLabels[i]) + 1;
+    }
+
+    // --- Dynamic child tracking ---
+    vector<TBox*> rightChildren;   // added horizontally (right side)
+    vector<TBox*> bottomChildren;  // added vertically (bottom area)
+    const int childW = 12, childH = 3;
+    int nextRightX  = 0;
+    int nextBottomY = 2;
+
+    auto getColorForIndex = [&](size_t idx) -> short {
+        return pal.getColorPair(s_colorPairs[idx % s_numColors].first, s_colorPairs[idx % s_numColors].second);
+    };
+
+    // --- Click handler: add/remove child boxes on button clicks ---
+    twin.setOnClick([&](int x, int y) {
+        if (buttons[0]->contains(x, y)) {
+            short cp = getColorForIndex(rightChildren.size());
+            TBox* child = new TBox(&container, childW, childH, nextBottomY, nextRightX, cp, "R" + to_string(rightChildren.size()));
+            rightChildren.push_back(child);
+            nextRightX += childW + 1;
+
+        } else if (buttons[1]->contains(x, y)) {
+            if (!rightChildren.empty()) {
+                TBox* last = rightChildren.back();
+                last->setParent(nullptr); // removes from parent via setParent
+                delete last;
+                rightChildren.pop_back();
+                nextRightX -= childW + 1;
+            }
+
+        } else if (buttons[2]->contains(x, y)) {
+            short cp = getColorForIndex(bottomChildren.size());
+            TBox* child = new TBox(&container, 20, childH, nextBottomY, 0, cp, "B" + to_string(bottomChildren.size()));
+            bottomChildren.push_back(child);
+            nextBottomY += childH + 1;
+
+        } else if (buttons[3]->contains(x, y)) {
+            if (!bottomChildren.empty()) {
+                TBox* last = bottomChildren.back();
+                last->setParent(nullptr); // removes from parent via setParent
+                delete last;
+                bottomChildren.pop_back();
+                nextBottomY -= childH + 1;
+            }
+
+        } else {
+            // No button clicked.
+        }
+    });
+
+    twin.loop();
+
+    cout << "exited" << endl;
+    return 0;
+}
+
+
 int main(int argc, char** argv) {
     Arguments args(argc, argv);
     args.addHelp("func", "Add a test/example function");
-    string func = args.getopt<string>("func", "main_test1");
+    string func = args.getopt<string>("func", "main_test3");
     if (func == "main_test1") return main_test1();
     if (func == "main_test2") return main_test2();
+    if (func == "main_test3") return main_test3();
     throw ERROR("--func argument is missing or invalid.");
 }

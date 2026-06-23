@@ -17,13 +17,13 @@ public:
     TLineup(TBox* parent, short colorPair, TOrientation o = HORIZONTAL):
         TBox(parent, colorPair, vector<string>{}), orientation(o)
     {
-        setAutoGrow(true);
+        autoGrow = true;
     }
 
     TLineup(TBox* parent, int width, int height, int top, int left, short colorPair, TOrientation o = HORIZONTAL):
         TBox(parent, width, height, top, left, colorPair), orientation(o)
     {
-        setAutoGrow(true);
+        autoGrow = true;
     }
 
     // --- No-parent overloads (parent is nullptr; use setParent() later) ---

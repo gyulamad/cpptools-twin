@@ -91,8 +91,9 @@ public:
                 // KEY_RESIZE already updated LINES/COLS internally in ncurses
                 int rows = LINES;
                 int cols = COLS;
-                root->setSize(COLS, LINES);
-                onResize(rows, cols);
+                resize_term(rows, cols);
+                root->setSize(cols, rows);
+                onResize(cols, rows);
             } else {
                 onKeyPress(event, keyName(event));
             }
@@ -155,7 +156,6 @@ protected:
     TEventResult onResize(int cols, int rows) override {
         TEventResult result = TEventHandler::onResize(cols, rows);
         if (result & TEventResult::Stop) return result;
-        root->setSize(cols, rows);
         return root->onResize(cols, rows);
     }
 

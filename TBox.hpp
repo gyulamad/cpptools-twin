@@ -432,7 +432,11 @@ protected:
         TEventResult result = TEventHandler::onResize(cols, rows);
         if (result & TEventResult::Stop) return result;
 
-        // TODO implement universal event handlings here if necessary
+        for (TBox* child : children) {
+            TEventResult childResult = child->onResize(cols, rows);
+            result |= childResult;
+            if (childResult & TEventResult::Stop) return result;
+        }
 
         return result;
     }

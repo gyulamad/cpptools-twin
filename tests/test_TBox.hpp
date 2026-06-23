@@ -486,4 +486,112 @@ TEST(test_TBox_autoGrow_grows_when_child_setSize_larger) {
     NCURSES_TEARDOWN;
 }
 
+// ============================================================================
+// TBox Tests - onResize Propagation to Children
+// ============================================================================
+
+TEST(test_TBox_onResize_propagates_to_single_child) {
+    NCURSES_SETUP;
+    TBox parent(40, 20, 1, vector<string>{});
+    TBox child(&parent, 30, 15, 0, 0, 2, "child");
+
+    bool childResized = false;
+    int resizeCols = 0, resizeRows = 0;
+
+    child.onResizeSubscribe([&](int cols, int rows) -> TEventResult {
+        childResized = true;
+        resizeCols = cols;
+        resizeRows = rows;
+        return TEventResult::Handled;
+    });
+
+    parent.onResize(80, 40);
+
+    assert(childResized && "Child should receive onResize event from parent");
+    assert(resizeCols == 80 && "Child should receive correct cols value");
+    assert(resizeRows == 40 && "Child should receive correct rows value");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_onResize_propagates_to_multiple_children) {
+    NCURSES_SETUP;
+    TBox parent(40, 20, 1, vector<string>{});
+    TBox child1(&parent, 15, 10, 0, 0, 2, "child1");
+    TBox child2(&parent, 15, 10, 0, 16, 3, "child2");
+    TBox child3(&parent, 15, 10, 10, 0, 4, "child3");
+
+    int callCount = 0;
+
+    child1.onResizeSubscribe([&](int, int) -> TEventResult {
+        callCount++;
+        return TEventResult::Handled;
+    });
+    child2.onResizeSubscribe([&](int, int) -> TEventResult {
+        callCount++;
+        return TEventResult::Handled;
+    });
+    child3.onResizeSubscribe([&](int, int) -> TEventResult {
+        callCount++;
+        return TEventResult::Handled;
+    });
+
+    parent.onResize(100, 50);
+
+    assert(callCount == 3 && "All three children should receive onResize event");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_onResize_propagates_to_nested_grandchildren) {
+    NCURSES_SETUP;
+    TBox grandparent(40, 20, 1, vector<string>{});
+    TBox parent(&grandparent, 30, 15, 0, 0, 2, "parent");
+    TBox child(&parent, 20, 10, 0, 0, 3, "child");
+
+    bool grandChildResized = false;
+
+    child.onResizeSubscribe([&](int cols, int rows) -> TEventResult {
+        (void)cols; (void)rows;
+        grandChildResized = true;
+        return TEventResult::Handled;
+    });
+
+    grandparent.onResize(80, 40);
+
+    assert(grandChildResized && "Grandchild should receive onResize event propagated through parent");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_onResize_stops_propagation_when_child_returns_Stop) {
+    NCURSES_SETUP;
+    TBox parent(40, 20, 1, vector<string>{});
+    TBox child1(&parent, 15, 10, 0, 0, 2, "child1");
+    TBox child2(&parent, 15, 10, 0, 16, 3, "child2");
+
+    int callCount = 0;
+
+    child1.onResizeSubscribe([&](int, int) -> TEventResult {
+        callCount++;
+        return TEventResult::Handled | TEventResult::Stop;
+    });
+    child2.onResizeSubscribe([&](int, int) -> TEventResult {
+        callCount++;
+        return TEventResult::None;
+    });
+
+    parent.onResize(80, 40);
+
+    assert(callCount == 1 && "Propagation should stop after first child returns Stop");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_onResize_no_children_does_not_crash) {
+    NCURSES_SETUP;
+    TBox box(40, 20, 1, vector<string>{"solo"});
+
+    // Should not crash when calling onResize with no children
+    TEventResult result = box.onResize(80, 40);
+    assert((result & TEventResult::Handled) == 0 && "No handlers set, so should return None");
+    NCURSES_TEARDOWN;
+}
+
 #endif

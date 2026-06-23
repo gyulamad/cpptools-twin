@@ -1,7 +1,5 @@
 #pragma once
 
-// DEPENDENCY: ncurses/ncurses
-
 #include <string>
 #include <vector>
 #include "TBox.hpp"
@@ -13,8 +11,9 @@ using namespace std;
 
 class TColorChannel : public ITScrollable {
 protected:
-    int value = 128;
+    int value = 0;
 public:
+    TColorChannel(int value = 0): value(value) {}
     ~TColorChannel() override {}
 
     void setValue(int v) {
@@ -41,7 +40,7 @@ public:
                  short cLabelR, short cLabelG, short cLabelB,
                  short cSb, short cPreview,
                  TColorPairPalette& palette,
-                 int initialR = 128, int initialG = 128, int initialB = 128)
+                 int initialR = 0, int initialG = 0, int initialB = 0)
         : TBox(parent, width, max(height, 4), top, left, cPreview), m_palette(palette)
     {
         // Layout constants: label(2) + gap(1) + scrollbar(?) + gap(2) + value(4) = totalWidth
@@ -123,8 +122,8 @@ public:
     TColorChannel& getChannelB() { return chB; }
 
 private:
-TColorPairPalette& m_palette;
-TColorChannel chR, chG, chB;
+    TColorPairPalette& m_palette;
+    TColorChannel chR, chG, chB;
     TScrollbar* sbR = nullptr;
     TScrollbar* sbG = nullptr;
     TScrollbar* sbB = nullptr;
@@ -143,7 +142,9 @@ TColorChannel chR, chG, chB;
         if (valB) valB->setContents(makeLabel(to_string(b)));
 
         unsigned int rgb = ((unsigned int)r << 16) | ((unsigned int)g << 8) | (unsigned int)b;
-        short cp = m_palette.getColorPair((int)rgb, -1);
+        // Dark background (< 0x88 on all channels) gets white text; light gets black.
+        int textColor = (r < 0x88 && g < 0x88 && b < 0x88) ? 0xFFFFFF : 0x000000;
+        short cp = m_palette.getColorPair(textColor, (int)rgb);
 
         preview->setColorPair(cp);
         string hexColor = "#" + uint2hex(rgb);

@@ -13,9 +13,7 @@
 
 #include "../../misc/ERROR.hpp"
 #include "../../misc/Arguments.hpp"
-#include "../../misc/hex.hpp"
 
-#include "../../twin/ITScrollable.hpp"
 #include "../../twin/TColorPairPalette.hpp"
 #include "../../twin/TWindow.hpp"
 #include "../../twin/TScrollbar.hpp"
@@ -341,7 +339,7 @@ int main_test4() {
     int startX = 6;  // left column for first channel group
     int pickerW = 35; // total width of color picker widget
 
-    TColorPicker picker(twin.getRoot(), pickerW, 4, 2, startX, cLabelR, cLabelG, cLabelB, cSb, cTitle, theme->getPalette(), 0, 0, 255);
+    TColorPicker picker(twin.getRoot(), pickerW, 4, 2, startX, cLabelR, cLabelG, cLabelB, cSb, cTitle, theme->getPalette());
     
     twin.loop();
 

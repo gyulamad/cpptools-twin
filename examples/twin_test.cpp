@@ -222,28 +222,11 @@ int main_test2() {
 
 // ============================================================================
 // Auto-Grow/Shrink Demo — visual test with clickable buttons
+// Each button subscribes its own click handler via onMouseClickSubscribe().
 // ============================================================================
 
-class TAutoGrowWindow : public TWindow {
-protected:
-    function<void(int, int)> onClickCallback;
-
-public:
-    using TWindow::TWindow;
-    virtual ~TAutoGrowWindow() {}
-
-    void setOnClick(function<void(int, int)> fn) {
-        onClickCallback = fn;
-    }
-
-    TEventResult onMouseClick(int x, int y, unsigned int button, unsigned int repeat) override {
-        if (onClickCallback) onClickCallback(x, y);
-        return TWindow::onMouseClick(x, y, button, repeat);
-    }
-};
-
 int main_test3() {
-    TAutoGrowWindow twin;
+    TWindow twin;
     TTheme* theme = twin.getTheme();
     short cButton   = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_BLUE);
     short cContainer= theme->getPalette().getColorPair(COLOR_BLACK, COLOR_CYAN);
@@ -292,41 +275,41 @@ int main_test3() {
         return pal.getColorPair(s_colorPairs[idx % s_numColors].first, s_colorPairs[idx % s_numColors].second);
     };
 
-    // --- Click handler: add/remove child boxes on button clicks ---
-    twin.setOnClick([&](int x, int y) {
-        if (buttons[0]->contains(x, y)) {
-            short cp = getColorForIndex(rightChildren.size());
-            TBox* child = new TBox(&container, childW, childH, nextBottomY, nextRightX, cp, "R" + to_string(rightChildren.size()));
-            rightChildren.push_back(child);
-            nextRightX += childW + 1;
+    // --- Subscribe click handlers directly to each button ---
+    buttons[0]->onMouseClickSubscribe([&](int, int, unsigned int, unsigned int) -> TEventResult {
+        short cp = getColorForIndex(rightChildren.size());
+        TBox* child = new TBox(&container, childW, childH, nextBottomY, nextRightX, cp, "R" + to_string(rightChildren.size()));
+        rightChildren.push_back(child);
+        nextRightX += childW + 1;
+        return TEventResult::Handled | TEventResult::Stop;
+    });
 
-        } else if (buttons[1]->contains(x, y)) {
-            if (!rightChildren.empty()) {
-                TBox* last = rightChildren.back();
-                last->setParent(nullptr); // removes from parent via setParent
-                delete last;
-                rightChildren.pop_back();
-                nextRightX -= childW + 1;
-            }
+    buttons[1]->onMouseClickSubscribe([&](int, int, unsigned int, unsigned int) -> TEventResult {
+        if (rightChildren.empty()) return TEventResult::None;
+        TBox* last = rightChildren.back();
+        last->setParent(nullptr); // removes from parent via setParent
+        delete last;
+        rightChildren.pop_back();
+        nextRightX -= childW + 1;
+        return TEventResult::Handled | TEventResult::Stop;
+    });
 
-        } else if (buttons[2]->contains(x, y)) {
-            short cp = getColorForIndex(bottomChildren.size());
-            TBox* child = new TBox(&container, 20, childH, nextBottomY, 0, cp, "B" + to_string(bottomChildren.size()));
-            bottomChildren.push_back(child);
-            nextBottomY += childH + 1;
+    buttons[2]->onMouseClickSubscribe([&](int, int, unsigned int, unsigned int) -> TEventResult {
+        short cp = getColorForIndex(bottomChildren.size());
+        TBox* child = new TBox(&container, 20, childH, nextBottomY, 0, cp, "B" + to_string(bottomChildren.size()));
+        bottomChildren.push_back(child);
+        nextBottomY += childH + 1;
+        return TEventResult::Handled | TEventResult::Stop;
+    });
 
-        } else if (buttons[3]->contains(x, y)) {
-            if (!bottomChildren.empty()) {
-                TBox* last = bottomChildren.back();
-                last->setParent(nullptr); // removes from parent via setParent
-                delete last;
-                bottomChildren.pop_back();
-                nextBottomY -= childH + 1;
-            }
-
-        } else {
-            // No button clicked.
-        }
+    buttons[3]->onMouseClickSubscribe([&](int, int, unsigned int, unsigned int) -> TEventResult {
+        if (bottomChildren.empty()) return TEventResult::None;
+        TBox* last = bottomChildren.back();
+        last->setParent(nullptr); // removes from parent via setParent
+        delete last;
+        bottomChildren.pop_back();
+        nextBottomY -= childH + 1;
+        return TEventResult::Handled | TEventResult::Stop;
     });
 
     twin.loop();

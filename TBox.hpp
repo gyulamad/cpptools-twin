@@ -43,7 +43,9 @@ protected:
     bool autoScroll = false;
     bool autoGrow = false;
 
- public:
+public:
+
+    friend class TLineup;
 
     TBox(TBox* parent, short colorPair, vector<string> contents):
         parent(parent), width(0), height(contents.size()), top(0), left(0), colorPair(colorPair)
@@ -488,7 +490,7 @@ protected:
     }
 
     // Propagates a bounds change up the ancestor chain.
-    void notifyParentBoundsChange() {
+    virtual void notifyParentBoundsChange() {
         TBox* node = parent;
         while (node) {
             bool wasAtBottom = node->autoScroll && node->isScrollAtBottom();

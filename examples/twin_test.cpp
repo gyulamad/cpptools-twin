@@ -349,6 +349,7 @@ int main_test4() {
     // --- Vertical Lineup: boxes stacked top to bottom ---
     TLineup vLineup(twin.getRoot(), cVLineup, VERTICAL);
     vLineup.setPosition(8, 2);
+    vLineup.setSize(30, 10);
     vLineup.setPaddings(1, 1, 1, 1);
     vLineup.setGap(1);
     vLineup.setFitChildren(true);

@@ -9,7 +9,7 @@
 // to TScrollbar).
 
 class TLineup: public TBox {
-private:
+ private:
     TOrientation orientation = HORIZONTAL;
     int gap = 0;
     int paddingTop = 0;
@@ -18,7 +18,7 @@ private:
     int paddingBottom = 0;
     bool fitChildren = false;
 
-public:
+ public:
     TLineup(TBox* parent, short colorPair, TOrientation o = HORIZONTAL):
         TBox(parent, colorPair, vector<string>{}), orientation(o)
     {
@@ -44,9 +44,10 @@ public:
 
     virtual ~TLineup() {}
 
+ public:
     void setGap(int newGap) {
         gap = newGap;
-        relayout();
+        recalc();
     }
 
     int getGap() const { return gap; }
@@ -55,16 +56,16 @@ public:
 
     // --- Padding getters/setters (trigger relayout on change) ---
 
-    void setPaddingTop(int v) { paddingTop = v; relayout(); }
+    void setPaddingTop(int v) { paddingTop = v; recalc(); }
     int getPaddingTop() const { return paddingTop; }
 
-    void setPaddingLeft(int v) { paddingLeft = v; relayout(); }
+    void setPaddingLeft(int v) { paddingLeft = v; recalc(); }
     int getPaddingLeft() const { return paddingLeft; }
 
-    void setPaddingRight(int v) { paddingRight = v; relayout(); }
+    void setPaddingRight(int v) { paddingRight = v; recalc(); }
     int getPaddingRight() const { return paddingRight; }
 
-    void setPaddingBottom(int v) { paddingBottom = v; relayout(); }
+    void setPaddingBottom(int v) { paddingBottom = v; recalc(); }
     int getPaddingBottom() const { return paddingBottom; }
 
     // Set all paddings at once (avoids multiple relayouts).
@@ -73,55 +74,82 @@ public:
         paddingLeft = left;
         paddingRight = right;
         paddingBottom = bottom;
-        relayout();
+        recalc();
     }
 
     // --- fitChildren: stretch children perpendicular to layout direction ---
 
     void setFitChildren(bool v) {
         fitChildren = v;
-        relayout();
+        recalc();
     }
 
     bool getFitChildren() const { return fitChildren; }
 
     void addChild(TBox* child) override {
         if (children.empty()) {
-            // First child starts at padding offset.
             positionChildAt(child, 0);
         } else {
             positionChild(child);
         }
 
-        // Call base addChild to register the child and update bounds.
+        // Disable autoGrow so TBox::addChild does not shrink our dimensions.
+        // recalc() will applyAutoGrow at the end with paddings accounted for.
+        bool saved = autoGrow;
+        autoGrow = false;
         TBox::addChild(child);
+        autoGrow = saved;
 
-        // Re-extend bottom/right so trailing padding survives the auto-grow in base addChild.
-        recalculateBounds();
-        bottom += paddingBottom;
-        right += paddingRight;
-        applyAutoGrow();
+        recalc();
     }
 
-   void relayout() {
-        for (int i = 0; i < (int)children.size(); ++i) {
-            positionChildAt(children[i], i);
+    // Recalculates all children positions and sizes.
+    // Restarts from the first child whenever one changes, so siblings
+    // see updated dimensions immediately. Stops when a full pass produces
+    // no changes (convergence).
+    void recalc() {
+        if (children.empty()) return;
+
+        bool changed = true;
+        while (changed) {
+            changed = false;
+            for (int i = 0; i < (int)children.size(); ++i) {
+                int oldW = children[i]->getWidth();
+                int oldH = children[i]->getHeight();
+                int oldT = children[i]->getTop();
+                int oldL = children[i]->getLeft();
+
+                // Disable autoGrow during positioning so child->setSize
+                // does not trigger notifyParentBoundsChange which would
+                // shrink our explicit dimensions before we finalize them.
+                bool savedAutoGrow = autoGrow;
+                autoGrow = false;
+                positionChildAt(children[i], i);
+                autoGrow = savedAutoGrow;
+
+                if (children[i]->getWidth() != oldW || children[i]->getHeight() != oldH ||
+                    children[i]->getTop() != oldT || children[i]->getLeft() != oldL) {
+                    changed = true;
+                    break; // restart from first child with updated dimensions
+                }
+            }
         }
+
         dirty = true;
         recalculateBounds();
         // Extend bounds so trailing padding is included in auto-grow.
         bottom += paddingBottom;
         right += paddingRight;
-        if (!children.empty()) applyAutoGrow();
+        applyAutoGrow();
     }
 
-private:
+ private:
     void positionChild(TBox* child) {
         int idx = (int)children.size();
         positionChildAt(child, idx);
     }
 
-   void positionChildAt(TBox* child, int idx) {
+    void positionChildAt(TBox* child, int idx) {
         bool horiz = (orientation == HORIZONTAL);
 
         // Flow axis: cumulative offset along layout direction.
@@ -150,7 +178,21 @@ private:
         if (fitChildren && height > 0 && width > 0) {
             int innerPerp = horiz ? (height - paddingTop - paddingBottom) : (width - paddingLeft - paddingRight);
             if (innerPerp < 1) innerPerp = 1;
+
+            // Store current flow dimension before setSize may trigger wrapping.
+            int prevFlow = horiz ? child->getWidth() : child->getHeight();
+
             child->setSize(horiz ? child->getWidth() : innerPerp, horiz ? innerPerp : child->getHeight());
+
+            // After setSize triggers applyWrap, the content extent (bottom) may have grown.
+            // Recalculate so getBottom reflects wrapped line count, then grow flow dimension if needed.
+            child->recalculateBounds();
+            int newFlow = max(child->getBottom(), prevFlow);
+            if (horiz && newFlow != child->getWidth()) {
+                child->setSize(newFlow, child->getHeight());
+            } else if (!horiz && newFlow != child->getHeight()) {
+                child->setSize(child->getWidth(), newFlow);
+            }
         }
     }
 };

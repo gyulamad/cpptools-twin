@@ -883,7 +883,6 @@ TEST(test_TBox_size_constructor_with_position) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     TBox lineup(&parent, 40, 10, 5, 3, 1);
-    lineup.setLineup(VERTICAL);
     assert(lineup.getWidth() == 40 && "Width should be preserved from constructor");
     assert(lineup.getHeight() == 10 && "Height should be preserved from constructor");
     assert(lineup.getTop() == 5 && "Top should be 5");
@@ -1221,94 +1220,6 @@ TEST(test_TBox_relayout_after_padding_change) {
     lineup.setPaddingLeft(4);
     assert(child1.getLeft() == 4 && "After setPaddingLeft, first child moves to 4");
     assert(child2.getLeft() == 8 && "Second at paddingLeft+firstWidth = 4+4=8 (gap=0)");
-    NCURSES_TEARDOWN;
-}
-
-// ============================================================================
-// TBox Tests - fitChildren
-// ============================================================================
-
-TEST(test_TBox_fitChildren_default_is_false) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1);
-    assert(!lineup.getFitChildren() && "fitChildren should default to false");
-    NCURSES_TEARDOWN;
-}
-
-TEST(test_TBox_horizontal_fitChildren_stretches_height) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    // Lineup with fixed height=10.
-    TBox lineup(&parent, 60, 10, 0, 0, 1);
-    lineup.setLineup(HORIZONTAL);
-    lineup.setFitChildren(true);
-    TBox child(5, 3, 1, "hello");
-    assert(child.getHeight() == 3 && "Child initial height is 3");
-    lineup.addChild(&child);
-    // With no padding: innerHeight = 10 - 0 - 0 = 10.
-    assert(child.getHeight() == 10 && "Horizontal fitChildren stretches child height to inner space (10)");
-    NCURSES_TEARDOWN;
-}
-
-TEST(test_TBox_horizontal_fitChildren_with_padding) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    // Lineup with fixed height=12, paddingTop=2, paddingBottom=3.
-    TBox lineup(&parent, 60, 12, 0, 0, 1);
-    lineup.setLineup(HORIZONTAL);
-    lineup.setPaddings(2, 0, 0, 3);
-    lineup.setFitChildren(true);
-    // innerHeight = 12 - 2 - 3 = 7.
-    TBox child(5, 3, 1, "hello");
-    lineup.addChild(&child);
-    assert(child.getHeight() == 7 && "Child height stretched to inner space (12-2-3=7)");
-    NCURSES_TEARDOWN;
-}
-
-TEST(test_TBox_vertical_fitChildren_stretches_width) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    // Lineup with fixed width=50.
-    TBox lineup(&parent, 50, 30, 0, 0, 1);
-    lineup.setLineup(VERTICAL);
-    lineup.setFitChildren(true);
-    TBox child(8, 3, 1, "short");
-    assert(child.getWidth() == 8 && "Child initial width is 8");
-    lineup.addChild(&child);
-    // With no padding: innerWidth = 50 - 0 - 0 = 50.
-    assert(child.getWidth() == 50 && "Vertical fitChildren stretches child width to inner space (50)");
-    NCURSES_TEARDOWN;
-}
-
-TEST(test_TBox_vertical_fitChildren_with_padding) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    // Lineup with fixed width=60, paddingLeft=3, paddingRight=5.
-    TBox lineup(&parent, 60, 30, 0, 0, 1);
-    lineup.setLineup(VERTICAL);
-    lineup.setPaddings(0, 3, 5, 0);
-    lineup.setFitChildren(true);
-    // innerWidth = 60 - 3 - 5 = 52.
-    TBox child(8, 3, 1, "short");
-    lineup.addChild(&child);
-    assert(child.getWidth() == 52 && "Child width stretched to inner space (60-3-5=52)");
-    NCURSES_TEARDOWN;
-}
-
-TEST(test_TBox_fitChildren_multiple_children_all_stretched) {
-    NCURSES_SETUP;
-    TBox parent(80, 24, 0, 0, 1, "");
-    // Horizontal lineup with height=10.
-    TBox lineup(&parent, 60, 10, 0, 0, 1);
-    lineup.setLineup(HORIZONTAL);
-    lineup.setFitChildren(true);
-    TBox child1(4, 2, 1, "ab");
-    TBox child2(5, 3, 1, "hello");
-    lineup.addChild(&child1);
-    lineup.addChild(&child2);
-    assert(child1.getHeight() == 10 && "First child stretched to inner height=10");
-    assert(child2.getHeight() == 10 && "Second child also stretched to inner height=10");
     NCURSES_TEARDOWN;
 }
 

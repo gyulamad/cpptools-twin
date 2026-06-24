@@ -54,7 +54,6 @@ protected:
     int paddingLeft = 0;
     int paddingRight = 0;
     int paddingBottom = 0;
-    bool fitChildren = false;
 
     // Line up
     // ---------------------------------------------
@@ -558,16 +557,6 @@ public:
         recalc();
     }
 
-    // --- fitChildren: stretch children perpendicular to layout direction ---
-
-    void setFitChildren(bool v) {
-        fitChildren = v;
-        autoGrow = false;
-        recalc();
-    }
-
-    bool getFitChildren() const { return fitChildren; }
-
     // void addChild(TBox* child) {
     //     if (children.empty()) {
     //         positionChildAt(child, 0);
@@ -853,26 +842,6 @@ protected:
         else
             child->setPosition(cumFlow, perpAlign);
 
-        // fitChildren: stretch perpendicular dimension to inner space.
-        if (fitChildren && height > 0 && width > 0) {
-            int innerPerp = horiz ? (height - paddingTop - paddingBottom) : (width - paddingLeft - paddingRight);
-            if (innerPerp < 1) innerPerp = 1;
-
-            // Store current flow dimension before setSize may trigger wrapping.
-            int prevFlow = horiz ? child->getWidth() : child->getHeight();
-
-            child->setSize(horiz ? child->getWidth() : innerPerp, horiz ? innerPerp : child->getHeight());
-
-            // After setSize triggers applyWrap, the content extent (bottom) may have grown.
-            // Recalculate so getBottom reflects wrapped line count, then grow flow dimension if needed.
-            child->recalculateBounds();
-            int newFlow = max(child->getBottom(), prevFlow);
-            if (horiz && newFlow != child->getWidth()) {
-                child->setSize(newFlow, child->getHeight());
-            } else if (!horiz && newFlow != child->getHeight()) {
-                child->setSize(child->getWidth(), newFlow);
-            }
-        }
     }
 
     // Line up

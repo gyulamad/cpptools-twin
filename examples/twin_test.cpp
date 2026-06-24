@@ -342,8 +342,6 @@ int main_test4() {
     hLineup.setPosition(3, 2);
     hLineup.setGap(1);
     hLineup.setAutoGrow(true);
-    // hLineup.setSize(50, 1);
-    // hLineup.setFitChildren(true);
 
 
     TBox hb1(&hLineup, cBox1, "[HB1] Hello!");
@@ -355,8 +353,6 @@ int main_test4() {
     TBox vLineup(twin.getRoot(), cVLineup);
     vLineup.setLineup(VERTICAL);
     vLineup.setPosition(7, 2);
-    // vLineup.setSize(20, 6);
-    // vLineup.setFitChildren(true);
     vLineup.setPaddings(1, 1, 1, 1);
     vLineup.setGap(1);
     vLineup.setScrollable(true);

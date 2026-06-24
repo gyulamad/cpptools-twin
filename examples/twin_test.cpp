@@ -253,7 +253,8 @@ int main_test3() {
 
     // --- Container: auto-grow box that holds children ---
     TBox container(40, 5, 5, 2, cContainer, vector<string>{});
-    container.setAutoGrow(true);
+    container.setAutoWidth(true);
+    container.setAutoHeight(true);
     twin.getRoot()->addChild(&container);
 
     // --- Buttons inside the container (row at top) ---
@@ -341,7 +342,8 @@ int main_test4() {
     hLineup.setLineup(HORIZONTAL);
     hLineup.setPosition(3, 2);
     hLineup.setGap(1);
-    hLineup.setAutoGrow(true);
+    hLineup.setAutoWidth(true);
+    hLineup.setAutoHeight(true);
 
 
     TBox hb1(&hLineup, cBox1, "[HB1] Hello!");
@@ -363,9 +365,42 @@ int main_test4() {
     vb1.setWrapText(true);
     vb2.setWrapText(true);
     vb2.setSize(20, 5);
-    vb3.setWrapText(true);    
+    vb3.setWrapText(true);
 
     twin.getRoot()->setScrollable(true);
+    twin.loop();
+
+    cout << "exited" << endl;
+    return 0;
+}
+
+
+int main_test5() {
+    TWindow twin;
+    TBox* root = twin.getRoot();
+    TTheme* theme = twin.getTheme();
+    short cRoot = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_RED);
+    short cBox1 = theme->getPalette().getColorPair(COLOR_RED, COLOR_WHITE);
+
+    root->setPaddingLeft(10);
+    root->setPaddingRight(10);
+    root->setColorPair(cRoot);
+    root->setLineup(VERTICAL);
+    
+    TBox box1(cBox1, "This is a very long text and I want to know if it breaks lines properly. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam nunc massa, congue in vulputate ac, vestibulum vel mauris. Nunc vel aliquet ipsum. Pellentesque bibendum lacus vel enim sollicitudin, nec egestas sem lobortis. Pellentesque finibus tortor id eros eleifend, quis mollis lorem pulvinar. Vestibulum semper justo odio, quis pharetra orci fringilla sit amet. Maecenas id accumsan risus. Fusce vel sem eget est convallis congue ut eu ante. Nunc luctus vitae metus sed bibendum.");
+    // box1.setWrapText(true);
+    box1.setAutoWidth(true);
+    // box1.setAutoHeight(true);
+    // box1.setSize(40, 3);
+
+    root->onResizeSubscribe([&](int, int) -> TEventResult {
+        root->setSize(COLS, LINES);
+        root->setLineup(VERTICAL);
+        return TEventResult::None;
+    });
+
+    root->addChild(&box1);
+
     twin.loop();
 
     cout << "exited" << endl;
@@ -376,10 +411,11 @@ int main_test4() {
 int main(int argc, char** argv) {
     Arguments args(argc, argv);
     args.addHelp("func", "Add a test/example function");
-    string func = args.getopt<string>("func", "main_test4");
+    string func = args.getopt<string>("func", "main_test5");
     if (func == "main_test1") return main_test1();
     if (func == "main_test2") return main_test2();
     if (func == "main_test3") return main_test3();
     if (func == "main_test4") return main_test4();
+    if (func == "main_test5") return main_test5();
     throw ERROR("--func argument is missing or invalid.");
 }

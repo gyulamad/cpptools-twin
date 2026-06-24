@@ -215,18 +215,33 @@ TEST(test_TBox_setAutoScroll_sets_flag) {
     NCURSES_TEARDOWN;
 }
 
-TEST(test_TBox_autoGrow_default_is_false) {
+TEST(test_TBox_autoAutoWidth_default_is_false) {
     NCURSES_SETUP;
     TBox box(20, 10, 1, "hello");
-    assert(!box.isAutoGrow() && "autoGrow should default to false");
+    assert(!box.isAutoWidth() && "autoGrow should default to false");
     NCURSES_TEARDOWN;
 }
 
-TEST(test_TBox_setAutoGrow_sets_flag) {
+TEST(test_TBox_autoHeight_default_is_false) {
     NCURSES_SETUP;
     TBox box(20, 10, 1, "hello");
-    box.setAutoGrow(true);
-    assert(box.isAutoGrow() && "setAutoGrow(true) should set the flag");
+    assert(!box.isAutoHeight() && "autoGrow should default to false");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_setAutoWidth_sets_flag) {
+    NCURSES_SETUP;
+    TBox box(20, 10, 1, "hello");
+    box.setAutoWidth(true);
+    assert(box.isAutoWidth() && "setAutoGrow(true) should set the flag");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TBox_setAutoHeight_sets_flag) {
+    NCURSES_SETUP;
+    TBox box(20, 10, 1, "hello");
+    box.setAutoHeight(true);
+    assert(box.isAutoHeight() && "setAutoGrow(true) should set the flag");
     NCURSES_TEARDOWN;
 }
 
@@ -601,8 +616,10 @@ TEST(test_TBox_autoGrow_grows_when_content_expands) {
     NCURSES_SETUP;
     TBox box(10, 3, 1, vector<string>{"line1", "line2"});
     // bottom=2, height grows to 2 initially via constructor auto-grow? No — default is false.
-    assert(!box.isAutoGrow() && "autoGrow should be off by default");
-    box.setAutoGrow(true);
+    assert(!box.isAutoWidth() && "should be off by default");
+    assert(!box.isAutoHeight() && "should be off by default");
+    box.setAutoWidth(true);
+    box.setAutoHeight(true);
     assert(box.getHeight() == 2 && "Height should match content lines after enabling autoGrow");
     // Now add more content
     box.setContents(vector<string>{"line1", "line2", "line3", "line4"});
@@ -615,7 +632,8 @@ TEST(test_TBox_autoGrow_shrinks_when_content_removed) {
     TBox box(10, 5, 1, vector<string>{"line1", "line2", "line3", "line4", "line5"});
     // Force a fixed size first so we can see auto-grow take over.
     assert(box.getWidth() == 10 && "Initial width should be 10");
-    box.setAutoGrow(true);
+    box.setAutoWidth(true);
+    box.setAutoHeight(true);
     // After enabling, height = bottom = 5 (content lines)
     int heightAfterEnable = box.getHeight();
     assert(heightAfterEnable == 5 && "Height should match content after autoGrow enabled");
@@ -633,7 +651,8 @@ TEST(test_TBox_autoGrow_parent_shrinks_when_child_setSize_smaller) {
     // Child at top=0, height=15 -> parent bottom = max(content=0, 0+15) = 15
     assert(parent.getBottom() == 15 && "Parent bottom should be 15 from child extent");
 
-    parent.setAutoGrow(true);
+    parent.setAutoWidth(true);
+    parent.setAutoHeight(true);
     int hAfterEnable = parent.getHeight();
     (void)hAfterEnable; // height may have been adjusted by auto-grow
 
@@ -654,7 +673,8 @@ TEST(test_TBox_autoGrow_parent_shrinks_when_child_moved_closer_to_origin) {
     // Child at top=5, height=15 -> parent bottom = max(content=0, 5+15) = 20
     assert(parent.getBottom() == 20 && "Parent bottom should be 20 from child extent");
 
-    parent.setAutoGrow(true);
+    parent.setAutoWidth(true);
+    parent.setAutoHeight(true);
     int hAfterEnable = parent.getHeight();
 
     // Move child closer to top — parent with autoGrow should cascade-shrink
@@ -672,8 +692,10 @@ TEST(test_TBox_autoGrow_cascades_through_grandparent) {
     TBox parent(&grandparent, 40, 20, 0, 0, 2, vector<string>{});
     TBox child(&parent, 30, 15, 0, 0, 3, "child");
 
-    grandparent.setAutoGrow(true);
-    parent.setAutoGrow(true);
+    grandparent.setAutoWidth(true);
+    grandparent.setAutoHeight(true);
+    parent.setAutoWidth(true);
+    parent.setAutoHeight(true);
 
     // Initial: child bottom=15 (from content), parent bottom=15, grandparent bottom=20 (via children)
     int gpH = grandparent.getHeight();
@@ -697,7 +719,8 @@ TEST(test_TBox_autoGrow_does_not_shrink_when_disabled) {
     TBox child(&parent, 30, 15, 0, 0, 2, "child");
 
     // Parent autoGrow is OFF — should NOT shrink when child shrinks
-    assert(!parent.isAutoGrow() && "autoGrow should be off by default");
+    assert(!parent.isAutoWidth() && "should be off by default");
+    assert(!parent.isAutoHeight() && "should be off by default");
     int hBefore = parent.getHeight();
     assert(hBefore == 20 && "Parent height should remain at fixed 20");
 
@@ -713,7 +736,8 @@ TEST(test_TBox_autoGrow_grows_when_child_setSize_larger) {
     TBox child(&parent, 30, 5, 0, 0, 2, "child");
 
     assert(parent.getBottom() == 5 && "Parent bottom should be 5 from small child");
-    parent.setAutoGrow(true);
+    parent.setAutoWidth(true);
+    parent.setAutoHeight(true);
     int hAfterEnable = parent.getHeight();
 
     // Now enlarge the child — parent with autoGrow should grow
@@ -866,7 +890,8 @@ TEST(test_TBox_autogrow_enabled_by_default) {
     TBox parent(80, 24, 0, 0, 1, "");
     TBox lineup(&parent, 1);
     lineup.setLineup(HORIZONTAL);
-    assert(lineup.isAutoGrow() && "TBox should have autoGrow enabled");
+    assert(lineup.isAutoWidth() && "TBox should have autoGrow enabled");
+    assert(lineup.isAutoHeight() && "TBox should have autoGrow enabled");
     NCURSES_TEARDOWN;
 }
 

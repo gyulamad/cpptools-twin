@@ -30,8 +30,8 @@ class TBox: public TEventHandler, public ITScrollable {
 protected:
     bool dirty = true;
     TBox* parent = nullptr;
-    int width, height, top, left;
-    short colorPair;
+    int width = 0, height = 0, top = 0, left = 0;
+    short colorPair = -1;
     vector<string> contents;
     bool wrapText = false;
     vector<string> rawContents;
@@ -42,7 +42,8 @@ protected:
     bool scrollable = false;
     int scrollSpeed = 3; // lines per scroll tick
     bool autoScroll = false;
-    bool autoGrow = false;
+    bool autoWidth = false;
+    bool autoHeight = false;
 
     // ---------------------------------------------
     // Line up
@@ -172,7 +173,8 @@ public:
             parent->dirty = true;
         this->width = width;
         this->height = height;
-        autoGrow = false;
+        autoWidth = false;
+        autoHeight = false;
         applyWrap();
         dirty = true;
         markChildrenDirty();
@@ -199,7 +201,8 @@ public:
         applyWrap();
         dirty = true;
         recalculateBounds();
-        applyAutoGrow();
+        applyAutoWidth();
+        applyAutoHeight();
         clampScroll();
         if (wasAtBottom)
             scrollToBottom();
@@ -263,12 +266,18 @@ public:
 
     bool isAutoScroll() const { return autoScroll; }
 
-    void setAutoGrow(bool value) {
-        autoGrow = value;
-        if (autoGrow) applyAutoGrow();
+    void setAutoWidth(bool value) {
+        autoWidth = value;
+        if (autoWidth) applyAutoWidth();
     }
 
-    bool isAutoGrow() const { return autoGrow; }
+    void setAutoHeight(bool value) {
+        autoHeight = value;
+        if (autoHeight) applyAutoHeight();
+    }
+
+    bool isAutoWidth() const { return autoWidth; }
+    bool isAutoHeight() const { return autoHeight; }
 
     void scrollToBottom() {
         setScrollTop(max(0, bottom - height + scrollPaddingBottom));
@@ -299,10 +308,13 @@ public:
                 // Disable autoGrow during positioning so child->setSize
                 // does not trigger notifyParentBoundsChange which would
                 // shrink our explicit dimensions before we finalize them.
-                bool savedAutoGrow = autoGrow;
-                autoGrow = false;
+                bool savedAutoWidth = autoWidth;
+                bool savedAutoHeight = autoHeight;
+                autoWidth = false;
+                autoHeight = false;
                 positionChildAt(children[i], i);
-                autoGrow = savedAutoGrow;
+                autoWidth = savedAutoWidth;
+                autoHeight = savedAutoHeight;
 
                 if (children[i]->getWidth() != oldW || children[i]->getHeight() != oldH ||
                     children[i]->getTop() != oldT || children[i]->getLeft() != oldL) {
@@ -316,7 +328,8 @@ public:
             // Extend bounds so trailing padding is included in auto-grow.
             bottom += paddingBottom;
             right += paddingRight;
-            applyAutoGrow();
+            applyAutoWidth();
+            applyAutoHeight();
         }
     }
 
@@ -433,7 +446,8 @@ public:
         children.push_back(child);
         child->parent = this;
         recalculateBounds();
-        applyAutoGrow();
+        applyAutoWidth();
+        applyAutoHeight();
         if (wasAtBottom)
             scrollToBottom();
 
@@ -521,7 +535,8 @@ public:
     void setLineup(TOrientation value) {
         orientation = value;
         lineup = true;
-        setAutoGrow(true);
+        setAutoWidth(true);
+        setAutoHeight(true);
         // recalculateBounds();
     }
         
@@ -609,13 +624,23 @@ protected:
     }
 
     // When autoGrow is enabled, adjusts height/width to match content extent.
-    void applyAutoGrow() {
-        if (!autoGrow) return;
-        int newHeight = bottom;
+    void applyAutoWidth() {
+        if (!autoWidth) return;
         int newWidth  = wrapText ? width : right;
-        if (newHeight != height || newWidth != width) {
-            height = newHeight;
+        if (newWidth != width) {
             width  = newWidth;
+            dirty = true;
+            markChildrenDirty();
+            clampScroll();
+        }
+        notifyParentBoundsChange();
+    }
+
+    void applyAutoHeight() {
+        if (!autoHeight) return;
+        int newHeight = bottom;
+        if (newHeight != height) {
+            height = newHeight;
             dirty = true;
             markChildrenDirty();
             clampScroll();
@@ -636,13 +661,15 @@ protected:
             node->recalculateBounds();
 
             // Apply auto-grow on this ancestor if enabled
-            if (node->autoGrow) {
-                int gHeight = node->bottom;
+            if (node->autoWidth) {
                 int gWidth  = node->wrapText ? node->width : node->right;
-                if (gHeight != node->height || gWidth != node->width) {
-                    node->height = gHeight;
+                if (gWidth != node->width)
                     node->width  = gWidth;
-                }
+            }
+            if (node->autoHeight) {
+                int gHeight = node->bottom;
+                if (gHeight != node->height)
+                    node->height = gHeight;
             }
 
             // Clamp scroll and auto-scroll if anything changed
@@ -876,7 +903,8 @@ private:
         child->parent = nullptr;
         dirty = true;
         recalculateBounds();
-        applyAutoGrow(); // shrink if auto-grow enabled
+        applyAutoWidth(); // shrink if auto-grow enabled
+        applyAutoHeight();
         notifyParentBoundsChange(); // cascade up the chain
     }
 };

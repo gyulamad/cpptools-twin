@@ -81,6 +81,7 @@ public:
 
     void setFitChildren(bool v) {
         fitChildren = v;
+        autoGrow = false;
         recalc();
     }
 

@@ -307,6 +307,9 @@ public:
 
     bool isWrapText() const { return wrapText; }
 
+    // Returns the wrapped content lines (after applyWrap).
+    vector<string> getWrappedContents() const { return contents; }
+
     // -------------------------------------------------------
     // Hit-testing
     // -------------------------------------------------------
@@ -656,11 +659,21 @@ protected:
                     contents.push_back(line.substr(pos));
                     break;
                 }
-                // Find last space within width
+
+                // Try to find the last space within the current line width.
                 int cut = width;
-                int space = line.rfind(' ', pos + width - 1);
-                if (space != (int)string::npos && space > pos)
-                    cut = space - pos;
+                int spaceWithin = line.rfind(' ', pos + width - 1);
+                if (spaceWithin != (int)string::npos && spaceWithin > pos) {
+                    cut = spaceWithin - pos;
+                } else {
+                    // No space within width — look forward for the next space
+                    // so we can break at a word boundary instead of mid-word.
+                    int nextSpace = line.find(' ', pos + 1);
+                    if (nextSpace != (int)string::npos && nextSpace > pos) {
+                        cut = nextSpace - pos;
+                    }
+                }
+
                 contents.push_back(line.substr(pos, cut));
                 pos += cut;
                 // Skip the space we broke on

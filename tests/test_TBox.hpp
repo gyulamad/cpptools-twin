@@ -250,6 +250,243 @@ TEST(test_TBox_setWrapText_sets_flag) {
 }
 
 // ============================================================================
+// TBox Tests - applyWrap comprehensive tests
+// ============================================================================
+
+TEST(test_applyWrap_no_wrap_returns_raw_contents) {
+    NCURSES_SETUP;
+    TBox box(5, 10, 1, "this is a long line");
+    // wrapText defaults to false
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 1 && "Should have exactly one line when wrapping is off");
+    assert(wrapped[0] == "this is a long line" && "Content should match raw text");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_wraps_at_word_boundary) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, "hello world foo bar");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 3 && "Should wrap into three lines at width=10");
+    assert(wrapped[0] == "hello" && "First line: 'hello'");
+    assert(wrapped[1] == "world foo" && "Second line: 'world foo'");
+    assert(wrapped[2] == "bar" && "Third line: 'bar'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_wraps_multiple_times) {
+    NCURSES_SETUP;
+    TBox box(8, 30, 1, "one two three four five six seven eight nine ten");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped[0] == "one two" && "First line: 'one two' (fits in width=8)");
+    assert(wrapped[1] == "three" && "Second line: 'three'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_hard_cut_when_no_space_in_width) {
+    NCURSES_SETUP;
+    TBox box(5, 10, 1, "supercalifragilistic");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 4 && "Should hard-cut into four chunks of 5 chars each (20/5=4)");
+    assert(wrapped[0] == "super" && "First chunk: 'super'");
+    assert(wrapped[1] == "calif" && "Second chunk: 'calif'");
+    assert(wrapped[2] == "ragil" && "Third chunk: 'ragil'");
+    assert(wrapped[3] == "istic" && "Fourth chunk: 'istic'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_hard_cut_with_remainder) {
+    NCURSES_SETUP;
+    TBox box(5, 10, 1, "supercalifragilistihexp"); // 23 chars
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 5 && "Should hard-cut into five chunks (last one shorter)");
+    assert(wrapped[0] == "super" && "First chunk: 'super'");
+    assert(wrapped[1] == "calif" && "Second chunk: 'calif'");
+    assert(wrapped[2] == "ragil" && "Third chunk: 'ragil'");
+    assert(wrapped[3] == "istih" && "Fourth chunk: 'istih'");
+    assert(wrapped[4] == "exp" && "Fifth chunk (remainder): 'exp'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_preserves_empty_lines) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, vector<string>{"hello", "", "world"});
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 3 && "Should preserve three lines including empty one");
+    assert(wrapped[0] == "hello" && "First line: 'hello'");
+    assert(wrapped[1] == "" && "Second line should be empty");
+    assert(wrapped[2] == "world" && "Third line: 'world'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_preserves_multiline_breaks) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, vector<string>{"hello world", "foo bar baz"});
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    // First raw line wraps to: "hello" | "world"
+    // Second raw line wraps to: "foo bar" | "baz"
+    assert(wrapped.size() == 4 && "Should produce four wrapped lines from two raw lines");
+    assert(wrapped[0] == "hello" && "Line 1: 'hello'");
+    assert(wrapped[1] == "world" && "Line 2: 'world'");
+    assert(wrapped[2] == "foo bar" && "Line 3: 'foo bar'");
+    assert(wrapped[3] == "baz" && "Line 4: 'baz'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_line_exactly_equal_to_width) {
+    NCURSES_SETUP;
+    TBox box(10, 10, 1, "exactlyten"); // exactly 10 chars
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 1 && "Line equal to width should stay on one line");
+    assert(wrapped[0] == "exactlyten" && "Content unchanged: 'exactlyten'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_line_shorter_than_width) {
+    NCURSES_SETUP;
+    TBox box(20, 10, 1, "short");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 1 && "Short line should stay on one line");
+    assert(wrapped[0] == "short" && "Content unchanged: 'short'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_skips_space_after_break) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, "hello world foo bar baz qux");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    // "hello" breaks at space -> next line starts with "world", not " world"
+    assert(wrapped[0] == "hello" && "Line 1: 'hello' (space skipped)");
+    assert(wrapped[1] == "world foo" && "Line 2: 'world foo' (no leading space)");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_word_exactly_at_boundary) {
+    NCURSES_SETUP;
+    TBox box(6, 10, 1, "abc def ghi jkl"); // each word is 3 chars + space = 6 per pair
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 4 && "Should produce four lines of 3-char words");
+    assert(wrapped[0] == "abc" && "Line 1: 'abc'");
+    assert(wrapped[1] == "def" && "Line 2: 'def'");
+    assert(wrapped[2] == "ghi" && "Line 3: 'ghi'");
+    assert(wrapped[3] == "jkl" && "Line 4: 'jkl'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_long_word_exceeds_width_no_space_within) {
+    NCURSES_SETUP;
+    // With forward-lookup fix: when no space within width, look ahead for next space.
+    // "shortword" (9 chars) fits at first break point -> pos=10
+    // "anotherlong" has no space in [10..19], but find(' ', 11) locates it at index 21
+    //   so cut = 11, pushing the whole word "anotherlong", then skip space -> pos=22
+    TBox box(10, 20, 1, "shortword anotherlong word");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 3 && "Should wrap into three lines (whole words)");
+    assert(wrapped[0] == "shortword" && "Line 1: 'shortword'");
+    assert(wrapped[1] == "anotherlong" && "Line 2: whole word 'anotherlong' (forward-lookup avoids mid-word cut)");
+    assert(wrapped[2] == "word" && "Line 3: 'word'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_multiple_consecutive_spaces) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, "hello   world");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 2 && "Should wrap into two lines");
+    // Breaks at the last space within width, so line includes trailing spaces before skip
+    assert(wrapped[0] == "hello  " && "Line 1: 'hello  ' (breaks at last space within width)");
+    assert(wrapped[1] == "world" && "Line 2: 'world'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_resize_triggers_rewrap) {
+    NCURSES_SETUP;
+    TBox box(20, 10, 1, "hello world foo bar baz qux");
+    box.setWrapText(true);
+    vector<string> wrappedWide = box.getWrappedContents();
+    assert(wrappedWide.size() == 2 && "At width=20 should wrap into two lines");
+
+    // Shrink the box - setSize calls applyWrap
+    box.setSize(8, 10);
+    vector<string> wrappedNarrow = box.getWrappedContents();
+    assert(wrappedNarrow.size() > wrappedWide.size() && "Narrower width should produce more wrapped lines");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_setContents_triggers_wrap) {
+    NCURSES_SETUP;
+    TBox box(10, 20, 1, "");
+    box.setWrapText(true);
+    // Initially empty
+    assert(box.getWrappedContents().size() == 1 && "Empty content should produce one line");
+
+    box.setContents("this is a longer text that wraps");
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() >= 2 && "New long content should be wrapped into multiple lines");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_empty_content) {
+    NCURSES_SETUP;
+    TBox box(10, 5, 1, vector<string>{});
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.empty() && "Empty content should produce zero lines");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_single_char_width) {
+    NCURSES_SETUP;
+    TBox box(1, 20, 1, "abcde");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 5 && "Each character should be on its own line at width=1");
+    assert(wrapped[0] == "a" && "Line 1: 'a'");
+    assert(wrapped[1] == "b" && "Line 2: 'b'");
+    assert(wrapped[2] == "c" && "Line 3: 'c'");
+    assert(wrapped[3] == "d" && "Line 4: 'd'");
+    assert(wrapped[4] == "e" && "Line 5: 'e'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_long_word_then_short_words) {
+    NCURSES_SETUP;
+    // With forward-lookup fix, the long word "superlongword" (13 chars) is kept intact.
+    TBox box(10, 20, 1, "superlongword hi there ok bye now done end go set run play jump swim dive");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped[0] == "superlongword" && "Line 1: whole word 'superlongword' (forward-lookup avoids mid-word cut)");
+    assert(wrapped[1] == "hi there" && "Line 2: 'hi there'");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_applyWrap_hard_cut_only_when_no_space_at_all) {
+    NCURSES_SETUP;
+    // When the entire remaining text has no space, hard-cut at width.
+    TBox box(5, 10, 1, "supercalifragilistic");
+    box.setWrapText(true);
+    vector<string> wrapped = box.getWrappedContents();
+    assert(wrapped.size() == 4 && "Should hard-cut into four chunks of 5 chars each (20/5=4)");
+    assert(wrapped[0] == "super" && "First chunk: 'super'");
+    assert(wrapped[1] == "calif" && "Second chunk: 'calif'");
+    assert(wrapped[2] == "ragil" && "Third chunk: 'ragil'");
+    assert(wrapped[3] == "istic" && "Fourth chunk: 'istic'");
+    NCURSES_TEARDOWN;
+}
+
+// ============================================================================
 // TBox Tests - Hit Testing (contains)
 // ============================================================================
 

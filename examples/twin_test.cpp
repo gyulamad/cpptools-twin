@@ -340,26 +340,31 @@ int main_test4() {
     TLineup hLineup(twin.getRoot(), cHLineup, HORIZONTAL);
     hLineup.setPosition(3, 2);
     hLineup.setGap(1);
-    hLineup.setFitChildren(true);
+    hLineup.setAutoGrow(true);
+    // hLineup.setSize(50, 1);
+    // hLineup.setFitChildren(true);
+
 
     TBox hb1(&hLineup, cBox1, "[HB1] Hello!");
     TBox hb2(&hLineup, cBox2, "[HB2] Side-by-side layout");
+    hb2.setSize(10, 3);
     TBox hb3(&hLineup, cBox3, "[HB3] Auto-positioned");
 
     // --- Vertical Lineup: boxes stacked top to bottom ---
     TLineup vLineup(twin.getRoot(), cVLineup, VERTICAL);
-    vLineup.setPosition(5, 2);
-    vLineup.setSize(10, 10);
+    vLineup.setPosition(7, 2);
+    // vLineup.setSize(20, 6);
+    // vLineup.setFitChildren(true);
     vLineup.setPaddings(1, 1, 1, 1);
     vLineup.setGap(1);
-    vLineup.setFitChildren(true);
     vLineup.setScrollable(true);
 
-    TBox vb1(&vLineup, cBox1, "[VB1] Stacked vertically - First item with a bit more text");
+    TBox vb1(&vLineup, cBox1, "[VB1] Stacked vertically - First item");
     TBox vb2(&vLineup, cBox2, "[VB2] Middle item\nWith multiple\nLines here");
-    TBox vb3(&vLineup, cBox4, "[VB3] Last item in lineup here");
+    TBox vb3(&vLineup, cBox4, "[VB3] Last item in lineup here with a bit more text");
     vb1.setWrapText(true);
     vb2.setWrapText(true);
+    vb2.setSize(20, 5);
     vb3.setWrapText(true);    
 
     twin.getRoot()->setScrollable(true);

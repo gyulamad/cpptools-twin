@@ -537,7 +537,6 @@ public:
         lineup = true;
         setAutoWidth(true);
         setAutoHeight(true);
-        // recalculateBounds();
     }
         
     void setGap(int newGap) {
@@ -571,23 +570,6 @@ public:
         paddingBottom = bottom;
         recalc();
     }
-
-    // void addChild(TBox* child) {
-    //     if (children.empty()) {
-    //         positionChildAt(child, 0);
-    //     } else {
-    //         positionChild(child);
-    //     }
-
-    //     // Disable autoGrow so TBox::addChild does not shrink our dimensions.
-    //     // recalc() will applyAutoGrow at the end with paddings accounted for.
-    //     // bool saved = autoGrow;
-    //     // autoGrow = false;
-    //     TBox::addChild(child);
-    //     // autoGrow = saved;
-
-    //     recalc();
-    // }
 
     // Line up
     // ---------------------------------------------

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 #include <termios.h>
 #include <unistd.h>
 
@@ -13,7 +11,6 @@ class TWindow: public TEventHandler {
 protected:
     TTheme* theme = nullptr;
     bool ownTheme = false;
-//    TColorPairPalette palette;
     TBox* root = nullptr;
     TEventHandler* focus = nullptr;
     SCREEN* screen = nullptr;

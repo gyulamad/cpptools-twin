@@ -30,8 +30,8 @@ public:
 
 protected:
     void notifyScrollChange() {
-        for (auto& cb : scrollChangeHandlers)
-            cb();
+        for (auto& callback : scrollChangeHandlers)
+            callback();
     }
 
 private:

@@ -265,11 +265,11 @@ public:
         dirty = true;
         recalculateBounds();
         clampScroll();
-        if (parent) parent->recalcChildren();
+        if (parent) parent->recalc();
     }
 
     // Placeholder for any child class to recalculate after 
-    virtual void recalcChildren() {}
+    virtual void recalc() {}
 
     // -------------------------------------------------------
     // Getters

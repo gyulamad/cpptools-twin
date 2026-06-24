@@ -269,4 +269,193 @@ TEST(test_TLineup_relayout_updates_bounds) {
     NCURSES_TEARDOWN;
 }
 
+// ============================================================================
+// TLineup Tests - Padding
+// ============================================================================
+
+TEST(test_TLineup_default_paddings_are_zero) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 1);
+    assert(lineup.getPaddingTop() == 0 && "Default paddingTop should be 0");
+    assert(lineup.getPaddingLeft() == 0 && "Default paddingLeft should be 0");
+    assert(lineup.getPaddingRight() == 0 && "Default paddingRight should be 0");
+    assert(lineup.getPaddingBottom() == 0 && "Default paddingBottom should be 0");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_horizontal_paddingLeft_offsets_first_child) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    lineup.setPaddingLeft(3);
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getLeft() == 3 && "First child left should equal paddingLeft=3");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_horizontal_paddingTop_offsets_first_child) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    lineup.setPaddingTop(2);
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getTop() == 2 && "First child top should equal paddingTop=2");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_vertical_paddingLeft_offsets_first_child) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, VERTICAL);
+    lineup.setPaddingLeft(3);
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getLeft() == 3 && "First child left should equal paddingLeft=3 in vertical layout");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_vertical_paddingTop_offsets_first_child) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, VERTICAL);
+    lineup.setPaddingTop(2);
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getTop() == 2 && "First child top should equal paddingTop=2 in vertical layout");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_horizontal_padding_with_gap) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    lineup.setPaddingLeft(3);
+    lineup.setGap(2);
+    TBox child1(4, 3, 1, "abc");
+    TBox child2(5, 3, 1, "hello");
+    lineup.addChild(&child1);
+    lineup.addChild(&child2);
+    assert(child1.getLeft() == 3 && "First at paddingLeft=3");
+    assert(child2.getLeft() == 9 && "Second at paddingLeft+firstWidth+gap = 3+4+2=9");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_setPaddings_batch) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    lineup.setPaddings(1, 3, 2, 1);
+    assert(lineup.getPaddingTop() == 1 && "paddingTop should be 1");
+    assert(lineup.getPaddingLeft() == 3 && "paddingLeft should be 3");
+    assert(lineup.getPaddingRight() == 2 && "paddingRight should be 2");
+    assert(lineup.getPaddingBottom() == 1 && "paddingBottom should be 1");
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getLeft() == 3 && "Child left offset by paddingLeft=3");
+    assert(child.getTop() == 1 && "Child top offset by paddingTop=1");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_relayout_after_padding_change) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox child1(4, 3, 1, "abc");
+    TBox child2(5, 3, 1, "hello");
+    lineup.addChild(&child1);
+    lineup.addChild(&child2);
+    assert(child1.getLeft() == 0 && "Initial left=0 with no padding");
+    // Change paddingLeft and verify relayout.
+    lineup.setPaddingLeft(4);
+    assert(child1.getLeft() == 4 && "After setPaddingLeft, first child moves to 4");
+    assert(child2.getLeft() == 8 && "Second at paddingLeft+firstWidth = 4+4=8 (gap=0)");
+    NCURSES_TEARDOWN;
+}
+
+// ============================================================================
+// TLineup Tests - fitChildren
+// ============================================================================
+
+TEST(test_TLineup_fitChildren_default_is_false) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    TLineup lineup(&parent, 1);
+    assert(!lineup.getFitChildren() && "fitChildren should default to false");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_horizontal_fitChildren_stretches_height) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    // Lineup with fixed height=10.
+    TLineup lineup(&parent, 60, 10, 0, 0, 1, HORIZONTAL);
+    lineup.setFitChildren(true);
+    TBox child(5, 3, 1, "hello");
+    assert(child.getHeight() == 3 && "Child initial height is 3");
+    lineup.addChild(&child);
+    // With no padding: innerHeight = 10 - 0 - 0 = 10.
+    assert(child.getHeight() == 10 && "Horizontal fitChildren stretches child height to inner space (10)");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_horizontal_fitChildren_with_padding) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    // Lineup with fixed height=12, paddingTop=2, paddingBottom=3.
+    TLineup lineup(&parent, 60, 12, 0, 0, 1, HORIZONTAL);
+    lineup.setPaddings(2, 0, 0, 3);
+    lineup.setFitChildren(true);
+    // innerHeight = 12 - 2 - 3 = 7.
+    TBox child(5, 3, 1, "hello");
+    lineup.addChild(&child);
+    assert(child.getHeight() == 7 && "Child height stretched to inner space (12-2-3=7)");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_vertical_fitChildren_stretches_width) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    // Lineup with fixed width=50.
+    TLineup lineup(&parent, 50, 30, 0, 0, 1, VERTICAL);
+    lineup.setFitChildren(true);
+    TBox child(8, 3, 1, "short");
+    assert(child.getWidth() == 8 && "Child initial width is 8");
+    lineup.addChild(&child);
+    // With no padding: innerWidth = 50 - 0 - 0 = 50.
+    assert(child.getWidth() == 50 && "Vertical fitChildren stretches child width to inner space (50)");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_vertical_fitChildren_with_padding) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    // Lineup with fixed width=60, paddingLeft=3, paddingRight=5.
+    TLineup lineup(&parent, 60, 30, 0, 0, 1, VERTICAL);
+    lineup.setPaddings(0, 3, 5, 0);
+    lineup.setFitChildren(true);
+    // innerWidth = 60 - 3 - 5 = 52.
+    TBox child(8, 3, 1, "short");
+    lineup.addChild(&child);
+    assert(child.getWidth() == 52 && "Child width stretched to inner space (60-3-5=52)");
+    NCURSES_TEARDOWN;
+}
+
+TEST(test_TLineup_fitChildren_multiple_children_all_stretched) {
+    NCURSES_SETUP;
+    TBox parent(80, 24, 0, 0, 1, "");
+    // Horizontal lineup with height=10.
+    TLineup lineup(&parent, 60, 10, 0, 0, 1, HORIZONTAL);
+    lineup.setFitChildren(true);
+    TBox child1(4, 2, 1, "ab");
+    TBox child2(5, 3, 1, "hello");
+    lineup.addChild(&child1);
+    lineup.addChild(&child2);
+    assert(child1.getHeight() == 10 && "First child stretched to inner height=10");
+    assert(child2.getHeight() == 10 && "Second child also stretched to inner height=10");
+    NCURSES_TEARDOWN;
+}
+
 #endif

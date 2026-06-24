@@ -351,7 +351,7 @@ int main_test4() {
     vLineup.setPosition(8, 2);
     vLineup.setPaddings(1, 1, 1, 1);
     vLineup.setGap(1);
-    // vLineup.setFitChildren(true);
+    vLineup.setFitChildren(true);
     vLineup.setScrollable(true);
 
     TBox vb1(&vLineup, cBox1, "[VB1] Stacked vertically\nFirst item");

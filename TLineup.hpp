@@ -121,55 +121,36 @@ private:
         positionChildAt(child, idx);
     }
 
-    void positionChildAt(TBox* child, int idx) {
-        if (orientation == HORIZONTAL) {
-            // Cumulative left: padding + sum of previous widths and gaps.
-            int cumulativeLeft = paddingLeft;
-            for (int i = 0; i < idx; ++i) {
-                cumulativeLeft += children[i]->getWidth() + gap;
-            }
+   void positionChildAt(TBox* child, int idx) {
+        bool horiz = (orientation == HORIZONTAL);
 
-            // Align top to min sibling top, but never above paddingTop.
-            int minTop = paddingTop;
-            if (!children.empty()) {
-                minTop = children[0]->getTop();
-                for (TBox* c : children)
-                    minTop = min(minTop, c->getTop());
-                minTop = max(minTop, paddingTop);
-            }
+        // Flow axis: cumulative offset along layout direction.
+        int flowPadding = horiz ? paddingLeft : paddingTop;
+        int cumFlow = flowPadding;
+        for (int i = 0; i < idx; ++i) {
+            cumFlow += (horiz ? children[i]->getWidth() : children[i]->getHeight()) + gap;
+        }
 
-            child->setPosition(minTop, cumulativeLeft);
+        // Perpendicular axis: align to min sibling, clamped by padding.
+        int perpPadding = horiz ? paddingTop : paddingLeft;
+        int perpAlign = perpPadding;
+        if (!children.empty()) {
+            perpAlign = (horiz ? children[0]->getTop() : children[0]->getLeft());
+            for (TBox* c : children)
+                perpAlign = min(perpAlign, horiz ? c->getTop() : c->getLeft());
+            perpAlign = max(perpAlign, perpPadding);
+        }
 
-            // fitChildren: stretch child height to inner space.
-            if (fitChildren && height > 0) {
-                int innerHeight = height - paddingTop - paddingBottom;
-                if (innerHeight < 1) innerHeight = 1;
-                child->setSize(child->getWidth(), innerHeight);
-            }
-        } else {
-            // Cumulative top: padding + sum of previous heights and gaps.
-            int cumulativeTop = paddingTop;
-            for (int i = 0; i < idx; ++i) {
-                cumulativeTop += children[i]->getHeight() + gap;
-            }
+        if (horiz)
+            child->setPosition(perpAlign, cumFlow);
+        else
+            child->setPosition(cumFlow, perpAlign);
 
-            // Align left to min sibling left, but never before paddingLeft.
-            int minLeft = paddingLeft;
-            if (!children.empty()) {
-                minLeft = children[0]->getLeft();
-                for (TBox* c : children)
-                    minLeft = min(minLeft, c->getLeft());
-                minLeft = max(minLeft, paddingLeft);
-            }
-
-            child->setPosition(cumulativeTop, minLeft);
-
-            // fitChildren: stretch child width to inner space.
-            if (fitChildren && width > 0) {
-                int innerWidth = width - paddingLeft - paddingRight;
-                if (innerWidth < 1) innerWidth = 1;
-                child->setSize(innerWidth, child->getHeight());
-            }
+        // fitChildren: stretch perpendicular dimension to inner space.
+        if (fitChildren && height > 0 && width > 0) {
+            int innerPerp = horiz ? (height - paddingTop - paddingBottom) : (width - paddingLeft - paddingRight);
+            if (innerPerp < 1) innerPerp = 1;
+            child->setSize(horiz ? child->getWidth() : innerPerp, horiz ? innerPerp : child->getHeight());
         }
     }
 };

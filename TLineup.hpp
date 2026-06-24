@@ -95,10 +95,10 @@ public:
 
         // Disable autoGrow so TBox::addChild does not shrink our dimensions.
         // recalc() will applyAutoGrow at the end with paddings accounted for.
-        bool saved = autoGrow;
-        autoGrow = false;
+        // bool saved = autoGrow;
+        // autoGrow = false;
         TBox::addChild(child);
-        autoGrow = saved;
+        // autoGrow = saved;
 
         recalc();
     }
@@ -107,7 +107,7 @@ public:
     // Restarts from the first child whenever one changes, so siblings
     // see updated dimensions immediately. Stops when a full pass produces
     // no changes (convergence).
-    void recalc() {
+    void recalc() override {
         if (children.empty()) return;
 
         for (int i = 0; i < (int)children.size(); ++i) {

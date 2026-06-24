@@ -157,6 +157,7 @@ public:
             parent->dirty = true;
         this->width = width;
         this->height = height;
+        autoGrow = false;
         applyWrap();
         dirty = true;
         markChildrenDirty();
@@ -264,7 +265,11 @@ public:
         dirty = true;
         recalculateBounds();
         clampScroll();
+        if (parent) parent->recalc();
     }
+
+    // Placeholder for any child class to recalculate after 
+    virtual void recalc() {}
 
     // -------------------------------------------------------
     // Getters

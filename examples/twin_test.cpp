@@ -348,18 +348,21 @@ int main_test4() {
 
     // --- Vertical Lineup: boxes stacked top to bottom ---
     TLineup vLineup(twin.getRoot(), cVLineup, VERTICAL);
-    vLineup.setPosition(8, 2);
-    vLineup.setSize(30, 10);
+    vLineup.setPosition(5, 2);
+    vLineup.setSize(10, 10);
     vLineup.setPaddings(1, 1, 1, 1);
     vLineup.setGap(1);
     vLineup.setFitChildren(true);
     vLineup.setScrollable(true);
 
-    TBox vb1(&vLineup, cBox1, "[VB1] Stacked vertically\nFirst item");
+    TBox vb1(&vLineup, cBox1, "[VB1] Stacked vertically - First item with a bit more text");
     TBox vb2(&vLineup, cBox2, "[VB2] Middle item\nWith multiple\nLines here");
     TBox vb3(&vLineup, cBox4, "[VB3] Last item in lineup here");
-    vb3.setWrapText(true);
+    vb1.setWrapText(true);
+    vb2.setWrapText(true);
+    vb3.setWrapText(true);    
 
+    twin.getRoot()->setScrollable(true);
     twin.loop();
 
     cout << "exited" << endl;

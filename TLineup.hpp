@@ -9,7 +9,7 @@
 // to TScrollbar).
 
 class TLineup: public TBox {
- private:
+private:
     TOrientation orientation = HORIZONTAL;
     int gap = 0;
     int paddingTop = 0;
@@ -18,7 +18,7 @@ class TLineup: public TBox {
     int paddingBottom = 0;
     bool fitChildren = false;
 
- public:
+public:
     TLineup(TBox* parent, short colorPair, TOrientation o = HORIZONTAL):
         TBox(parent, colorPair, vector<string>{}), orientation(o)
     {
@@ -44,7 +44,7 @@ class TLineup: public TBox {
 
     virtual ~TLineup() {}
 
- public:
+public:
     void setGap(int newGap) {
         gap = newGap;
         recalc();
@@ -110,28 +110,24 @@ class TLineup: public TBox {
     void recalc() {
         if (children.empty()) return;
 
-        bool changed = true;
-        while (changed) {
-            changed = false;
-            for (int i = 0; i < (int)children.size(); ++i) {
-                int oldW = children[i]->getWidth();
-                int oldH = children[i]->getHeight();
-                int oldT = children[i]->getTop();
-                int oldL = children[i]->getLeft();
+        for (int i = 0; i < (int)children.size(); ++i) {
+            int oldW = children[i]->getWidth();
+            int oldH = children[i]->getHeight();
+            int oldT = children[i]->getTop();
+            int oldL = children[i]->getLeft();
 
-                // Disable autoGrow during positioning so child->setSize
-                // does not trigger notifyParentBoundsChange which would
-                // shrink our explicit dimensions before we finalize them.
-                bool savedAutoGrow = autoGrow;
-                autoGrow = false;
-                positionChildAt(children[i], i);
-                autoGrow = savedAutoGrow;
+            // Disable autoGrow during positioning so child->setSize
+            // does not trigger notifyParentBoundsChange which would
+            // shrink our explicit dimensions before we finalize them.
+            bool savedAutoGrow = autoGrow;
+            autoGrow = false;
+            positionChildAt(children[i], i);
+            autoGrow = savedAutoGrow;
 
-                if (children[i]->getWidth() != oldW || children[i]->getHeight() != oldH ||
-                    children[i]->getTop() != oldT || children[i]->getLeft() != oldL) {
-                    changed = true;
-                    break; // restart from first child with updated dimensions
-                }
+            if (children[i]->getWidth() != oldW || children[i]->getHeight() != oldH ||
+                children[i]->getTop() != oldT || children[i]->getLeft() != oldL) {
+                i = -1;
+                continue; // restart from first child with updated dimensions
             }
         }
 
@@ -143,7 +139,7 @@ class TLineup: public TBox {
         applyAutoGrow();
     }
 
- private:
+private:
     void positionChild(TBox* child) {
         int idx = (int)children.size();
         positionChildAt(child, idx);

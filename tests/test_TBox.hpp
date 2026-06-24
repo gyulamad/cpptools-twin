@@ -648,7 +648,7 @@ TEST(test_TBox_autoGrow_parent_shrinks_when_child_setSize_smaller) {
 TEST(test_TBox_autoGrow_parent_shrinks_when_child_moved_closer_to_origin) {
     NCURSES_SETUP;
     TBox parent(40, 20, 1, vector<string>{});
-    parent.setLineup(HORIZONTAL);
+    // parent.setLineup(HORIZONTAL);
     // Constructor: (parent, width, height, top, left, colorPair, contents)
     TBox child(&parent, 30, 15, 5, 0, 2, "child");
     // Child at top=5, height=15 -> parent bottom = max(content=0, 5+15) = 20
@@ -847,7 +847,8 @@ TEST(test_TBox_default_orientation_is_horizontal) {
 TEST(test_TBox_explicit_vertical_orientation) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     assert(lineup.getOrientation() == VERTICAL && "Orientation should be VERTICAL");
     NCURSES_TEARDOWN;
 }
@@ -864,13 +865,15 @@ TEST(test_TBox_autogrow_enabled_by_default) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     assert(lineup.isAutoGrow() && "TBox should have autoGrow enabled");
     NCURSES_TEARDOWN;
 }
 
 TEST(test_TBox_no_parent_constructor) {
     NCURSES_SETUP;
-    TBox lineup(1, HORIZONTAL);
+    TBox lineup(1);
+    lineup.setLineup(HORIZONTAL);
     assert(lineup.getParent() == nullptr && "No-parent constructor should set parent to nullptr");
     assert(lineup.getOrientation() == HORIZONTAL && "Orientation should be HORIZONTAL");
     NCURSES_TEARDOWN;
@@ -879,7 +882,8 @@ TEST(test_TBox_no_parent_constructor) {
 TEST(test_TBox_size_constructor_with_position) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 40, 10, 5, 3, 1, VERTICAL);
+    TBox lineup(&parent, 40, 10, 5, 3, 1);
+    lineup.setLineup(VERTICAL);
     assert(lineup.getWidth() == 40 && "Width should be preserved from constructor");
     assert(lineup.getHeight() == 10 && "Height should be preserved from constructor");
     assert(lineup.getTop() == 5 && "Top should be 5");
@@ -907,7 +911,8 @@ TEST(test_TBox_setGap_updates_gap) {
 TEST(test_TBox_horizontal_first_child_at_origin) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
     assert(child.getTop() == 0 && "First child top should be 0 in horizontal layout");
@@ -918,7 +923,8 @@ TEST(test_TBox_horizontal_first_child_at_origin) {
 TEST(test_TBox_horizontal_second_child_placed_after_first) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 3, 1, "world");
     lineup.addChild(&child1);
@@ -931,7 +937,8 @@ TEST(test_TBox_horizontal_second_child_placed_after_first) {
 TEST(test_TBox_horizontal_gap_between_children) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setGap(3);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 3, 1, "world");
@@ -944,7 +951,8 @@ TEST(test_TBox_horizontal_gap_between_children) {
 TEST(test_TBox_horizontal_multiple_children_cumulative_positions) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setGap(2);
     TBox child1(3, 2, 1, "abc");
     TBox child2(4, 2, 1, "defg");
@@ -961,7 +969,8 @@ TEST(test_TBox_horizontal_multiple_children_cumulative_positions) {
 TEST(test_TBox_horizontal_aligns_to_min_top) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child1(5, 3, 1, "hello");
     lineup.addChild(&child1);
     // Manually adjust first child top to simulate offset
@@ -979,7 +988,8 @@ TEST(test_TBox_horizontal_aligns_to_min_top) {
 TEST(test_TBox_vertical_first_child_at_origin) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
     assert(child.getTop() == 0 && "First child top should be 0 in vertical layout");
@@ -990,7 +1000,8 @@ TEST(test_TBox_vertical_first_child_at_origin) {
 TEST(test_TBox_vertical_second_child_placed_below_first) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 4, 1, "world\n!");
     lineup.addChild(&child1);
@@ -1003,7 +1014,8 @@ TEST(test_TBox_vertical_second_child_placed_below_first) {
 TEST(test_TBox_vertical_gap_between_children) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setGap(3);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 4, 1, "world\n!");
@@ -1016,7 +1028,8 @@ TEST(test_TBox_vertical_gap_between_children) {
 TEST(test_TBox_vertical_multiple_children_cumulative_positions) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setGap(2);
     TBox child1(3, 2, 1, "ab");
     TBox child2(4, 3, 1, "def\ngh");
@@ -1033,7 +1046,8 @@ TEST(test_TBox_vertical_multiple_children_cumulative_positions) {
 TEST(test_TBox_vertical_aligns_to_min_left) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     TBox child1(5, 3, 1, "hello");
     lineup.addChild(&child1);
     // Manually adjust first child left to simulate offset
@@ -1051,7 +1065,8 @@ TEST(test_TBox_vertical_aligns_to_min_left) {
 TEST(test_TBox_relayout_after_gap_change_horizontal) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 3, 1, "world");
     lineup.addChild(&child1);
@@ -1066,7 +1081,8 @@ TEST(test_TBox_relayout_after_gap_change_horizontal) {
 TEST(test_TBox_relayout_after_gap_change_vertical) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, VERTICAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(VERTICAL);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 4, 1, "world\n!");
     lineup.addChild(&child1);
@@ -1081,7 +1097,8 @@ TEST(test_TBox_relayout_after_gap_change_vertical) {
 TEST(test_TBox_relayout_updates_bounds) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 1, HORIZONTAL);
+    TBox lineup(&parent, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child1(5, 3, 1, "hello");
     TBox child2(4, 3, 1, "world");
     lineup.addChild(&child1);
@@ -1112,7 +1129,8 @@ TEST(test_TBox_default_paddings_are_zero) {
 TEST(test_TBox_horizontal_paddingLeft_offsets_first_child) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setPaddingLeft(3);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
@@ -1123,7 +1141,8 @@ TEST(test_TBox_horizontal_paddingLeft_offsets_first_child) {
 TEST(test_TBox_horizontal_paddingTop_offsets_first_child) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setPaddingTop(2);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
@@ -1134,7 +1153,8 @@ TEST(test_TBox_horizontal_paddingTop_offsets_first_child) {
 TEST(test_TBox_vertical_paddingLeft_offsets_first_child) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, VERTICAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setPaddingLeft(3);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
@@ -1145,7 +1165,8 @@ TEST(test_TBox_vertical_paddingLeft_offsets_first_child) {
 TEST(test_TBox_vertical_paddingTop_offsets_first_child) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, VERTICAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setPaddingTop(2);
     TBox child(5, 3, 1, "hello");
     lineup.addChild(&child);
@@ -1156,7 +1177,8 @@ TEST(test_TBox_vertical_paddingTop_offsets_first_child) {
 TEST(test_TBox_horizontal_padding_with_gap) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setPaddingLeft(3);
     lineup.setGap(2);
     TBox child1(4, 3, 1, "abc");
@@ -1171,7 +1193,8 @@ TEST(test_TBox_horizontal_padding_with_gap) {
 TEST(test_TBox_setPaddings_batch) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setPaddings(1, 3, 2, 1);
     assert(lineup.getPaddingTop() == 1 && "paddingTop should be 1");
     assert(lineup.getPaddingLeft() == 3 && "paddingLeft should be 3");
@@ -1187,7 +1210,8 @@ TEST(test_TBox_setPaddings_batch) {
 TEST(test_TBox_relayout_after_padding_change) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
-    TBox lineup(&parent, 60, 15, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 15, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     TBox child1(4, 3, 1, "abc");
     TBox child2(5, 3, 1, "hello");
     lineup.addChild(&child1);
@@ -1216,7 +1240,8 @@ TEST(test_TBox_horizontal_fitChildren_stretches_height) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     // Lineup with fixed height=10.
-    TBox lineup(&parent, 60, 10, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 10, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setFitChildren(true);
     TBox child(5, 3, 1, "hello");
     assert(child.getHeight() == 3 && "Child initial height is 3");
@@ -1230,7 +1255,8 @@ TEST(test_TBox_horizontal_fitChildren_with_padding) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     // Lineup with fixed height=12, paddingTop=2, paddingBottom=3.
-    TBox lineup(&parent, 60, 12, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 12, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setPaddings(2, 0, 0, 3);
     lineup.setFitChildren(true);
     // innerHeight = 12 - 2 - 3 = 7.
@@ -1244,7 +1270,8 @@ TEST(test_TBox_vertical_fitChildren_stretches_width) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     // Lineup with fixed width=50.
-    TBox lineup(&parent, 50, 30, 0, 0, 1, VERTICAL);
+    TBox lineup(&parent, 50, 30, 0, 0, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setFitChildren(true);
     TBox child(8, 3, 1, "short");
     assert(child.getWidth() == 8 && "Child initial width is 8");
@@ -1258,7 +1285,8 @@ TEST(test_TBox_vertical_fitChildren_with_padding) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     // Lineup with fixed width=60, paddingLeft=3, paddingRight=5.
-    TBox lineup(&parent, 60, 30, 0, 0, 1, VERTICAL);
+    TBox lineup(&parent, 60, 30, 0, 0, 1);
+    lineup.setLineup(VERTICAL);
     lineup.setPaddings(0, 3, 5, 0);
     lineup.setFitChildren(true);
     // innerWidth = 60 - 3 - 5 = 52.
@@ -1272,7 +1300,8 @@ TEST(test_TBox_fitChildren_multiple_children_all_stretched) {
     NCURSES_SETUP;
     TBox parent(80, 24, 0, 0, 1, "");
     // Horizontal lineup with height=10.
-    TBox lineup(&parent, 60, 10, 0, 0, 1, HORIZONTAL);
+    TBox lineup(&parent, 60, 10, 0, 0, 1);
+    lineup.setLineup(HORIZONTAL);
     lineup.setFitChildren(true);
     TBox child1(4, 2, 1, "ab");
     TBox child2(5, 3, 1, "hello");

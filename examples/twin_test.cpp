@@ -19,7 +19,7 @@
 #include "../../twin/TWindow.hpp"
 #include "../../twin/TScrollbar.hpp"
 #include "../../twin/TInput.hpp"
-#include "../../twin/TLineup.hpp"
+#include "../../twin/TBox.hpp"
 
 using namespace std;
 
@@ -334,10 +334,11 @@ int main_test4() {
     short cBox4    = theme->getPalette().getColorPair(COLOR_WHITE, COLOR_RED);
 
     // --- Title ---
-    TBox title(twin.getRoot(), 50, 1, 0, 2, cTitle, "TLineup Demo — HORIZONTAL and VERTICAL layouts");
+    TBox title(twin.getRoot(), 50, 1, 0, 2, cTitle, "TBox Lineup Demo — HORIZONTAL and VERTICAL layouts");
 
     // --- Horizontal Lineup: boxes placed side by side ---
-    TLineup hLineup(twin.getRoot(), cHLineup, HORIZONTAL);
+    TBox hLineup(twin.getRoot(), cHLineup); //, HORIZONTAL);
+    hLineup.setLineup(HORIZONTAL);
     hLineup.setPosition(3, 2);
     hLineup.setGap(1);
     hLineup.setAutoGrow(true);
@@ -351,7 +352,8 @@ int main_test4() {
     TBox hb3(&hLineup, cBox3, "[HB3] Auto-positioned");
 
     // --- Vertical Lineup: boxes stacked top to bottom ---
-    TLineup vLineup(twin.getRoot(), cVLineup, VERTICAL);
+    TBox vLineup(twin.getRoot(), cVLineup);
+    vLineup.setLineup(VERTICAL);
     vLineup.setPosition(7, 2);
     // vLineup.setSize(20, 6);
     // vLineup.setFitChildren(true);

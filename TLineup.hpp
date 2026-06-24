@@ -47,7 +47,7 @@ public:
 public:
     void setGap(int newGap) {
         gap = newGap;
-        recalc();
+        recalcChildren();
     }
 
     int getGap() const { return gap; }
@@ -56,16 +56,16 @@ public:
 
     // --- Padding getters/setters (trigger relayout on change) ---
 
-    void setPaddingTop(int v) { paddingTop = v; recalc(); }
+    void setPaddingTop(int v) { paddingTop = v; recalcChildren(); }
     int getPaddingTop() const { return paddingTop; }
 
-    void setPaddingLeft(int v) { paddingLeft = v; recalc(); }
+    void setPaddingLeft(int v) { paddingLeft = v; recalcChildren(); }
     int getPaddingLeft() const { return paddingLeft; }
 
-    void setPaddingRight(int v) { paddingRight = v; recalc(); }
+    void setPaddingRight(int v) { paddingRight = v; recalcChildren(); }
     int getPaddingRight() const { return paddingRight; }
 
-    void setPaddingBottom(int v) { paddingBottom = v; recalc(); }
+    void setPaddingBottom(int v) { paddingBottom = v; recalcChildren(); }
     int getPaddingBottom() const { return paddingBottom; }
 
     // Set all paddings at once (avoids multiple relayouts).
@@ -74,14 +74,14 @@ public:
         paddingLeft = left;
         paddingRight = right;
         paddingBottom = bottom;
-        recalc();
+        recalcChildren();
     }
 
     // --- fitChildren: stretch children perpendicular to layout direction ---
 
     void setFitChildren(bool v) {
         fitChildren = v;
-        recalc();
+        recalcChildren();
     }
 
     bool getFitChildren() const { return fitChildren; }
@@ -100,14 +100,14 @@ public:
         TBox::addChild(child);
         // autoGrow = saved;
 
-        recalc();
+        recalcChildren();
     }
 
     // Recalculates all children positions and sizes.
     // Restarts from the first child whenever one changes, so siblings
     // see updated dimensions immediately. Stops when a full pass produces
     // no changes (convergence).
-    void recalc() override {
+    void recalcChildren() override {
         if (children.empty()) return;
 
         for (int i = 0; i < (int)children.size(); ++i) {
